@@ -3,10 +3,10 @@
   publish   = ".next"
 
 [dev]
-  command   = "npm run dev"
-  port      = 3000
+  command    = "npm run dev"
+  port       = 8888
   targetPort = 3000
-  framework = "#custom"
+  framework  = "#custom"
 
 [functions]
   directory = "netlify/functions"
