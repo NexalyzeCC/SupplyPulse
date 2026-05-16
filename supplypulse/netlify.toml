@@ -1,0 +1,6 @@
+[functions]
+  directory = "netlify/functions"
+
+[[scheduled_functions]]
+  function = "scheduled-scan"
+  schedule = "0 6 * * *"
