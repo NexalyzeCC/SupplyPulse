@@ -4,3 +4,13 @@
 [[scheduled_functions]]
   function = "scheduled-scan"
   schedule = "0 6 * * *"
+
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[dev]
+  command = "echo 'Functions only mode'"
+  port = 3001
+  targetPort = 8888
+  autoLaunch = false

@@ -1,11 +1,5 @@
 const OpenAI = require("openai");
-const { createClient } = require("@supabase/supabase-js");
-
-const openai = new OpenAI.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { createServiceClient, requireEnv } = require("./lib/supabase");
 
 function sanitizeSupplierName(name) {
   return String(name).trim().slice(0, 100).replace(/[^\w\s\-.,&()]/g, "");
@@ -17,7 +11,17 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { supplierId, supplierName, country, category } = JSON.parse(event.body);
+    const { supplierId, supplierName, country, category } = JSON.parse(event.body || "{}");
+
+    if (!supplierName) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "supplierName is required" }),
+      };
+    }
+
+    const openai = new OpenAI.OpenAI({ apiKey: requireEnv("OPENAI_API_KEY") });
+    const supabase = createServiceClient();
 
     // Step 1: Web search via Tavily
     const safeName = sanitizeSupplierName(supplierName);
@@ -25,7 +29,7 @@ exports.handler = async (event) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
+        api_key: requireEnv("TAVILY_API_KEY"),
         query: `${safeName} ${country} financial risk news legal 2024`,
         search_depth: "advanced",
         max_results: 8,

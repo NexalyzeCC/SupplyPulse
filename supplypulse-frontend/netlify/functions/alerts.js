@@ -19,13 +19,13 @@ exports.handler = async (event) => {
 
     // Get all scores for this user's suppliers, ordered newest first
     const { data, error } = await supabase
-      .from("scores")
+      .from("supplier_scores")
       .select(`
-        score, risk, summary, alerts, scored_at,
+        score, direction, summary, recommendations, created_at,
         suppliers!inner(id, name, country, category, user_id)
       `)
       .eq("suppliers.user_id", userId)
-      .order("scored_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(50);
 
     if (error) {

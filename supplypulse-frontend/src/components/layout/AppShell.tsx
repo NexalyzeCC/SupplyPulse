@@ -23,7 +23,7 @@ export default function AppShell({ email, auth, children }: AppShellProps) {
 
   // Auto-close sidebar whenever the route changes (link tapped on mobile)
   useEffect(() => {
-    setSidebarOpen(false);
+    queueMicrotask(() => setSidebarOpen(false));
   }, [pathname]);
 
   // Prevent background scrolling while the mobile sidebar is open

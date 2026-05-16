@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ async function runPollLoop(
   abort:      AbortController,
   pollCount:  number,
   supplierId: string,
+  accessToken: string,
   setState:   React.Dispatch<React.SetStateAction<ScanState>>,
   onComplete: () => void,
 ): Promise<void> {
@@ -74,7 +76,10 @@ async function runPollLoop(
   try {
     const res = await fetch(
       `/.netlify/functions/score-status?id=${encodeURIComponent(supplierId)}`,
-      { signal: abort.signal },
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: abort.signal,
+      },
     );
 
     if (!res.ok) {
@@ -115,7 +120,14 @@ async function runPollLoop(
             ? { ...prev, polls: pollCount + 1 }
             : prev,
         );
-        await runPollLoop(abort, pollCount + 1, supplierId, setState, onComplete);
+        await runPollLoop(
+          abort,
+          pollCount + 1,
+          supplierId,
+          accessToken,
+          setState,
+          onComplete,
+        );
     }
   } catch (err) {
     if (!abort.signal.aborted) {
@@ -193,9 +205,25 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
     abortRef.current = abort;
 
     try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setState({
+          kind: "error",
+          message: "Your session expired. Sign in again to start a scan.",
+        });
+        return;
+      }
+
       const res = await fetch("/.netlify/functions/score-supplier", {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
         body:    JSON.stringify({ supplierId }),
         signal:  abort.signal,
       });
@@ -212,7 +240,14 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
       startRef.current = Date.now();
       setState({ kind: "scanning", polls: 0, elapsedMs: 0 });
 
-      await runPollLoop(abort, 0, supplierId, setState, () => router.refresh());
+      await runPollLoop(
+        abort,
+        0,
+        supplierId,
+        session.access_token,
+        setState,
+        () => router.refresh(),
+      );
     } catch (err) {
       if (!abort.signal.aborted) {
         setState({

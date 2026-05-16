@@ -1,13 +1,9 @@
 const { schedule } = require("@netlify/functions");
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { createServiceClient } = require("./lib/supabase");
 
 const handler = async () => {
   console.log("[scheduled-scan] Starting daily scan", new Date().toISOString());
+  const supabase = createServiceClient();
 
   const { data: suppliers, error } = await supabase
     .from("suppliers")

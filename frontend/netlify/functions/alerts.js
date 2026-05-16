@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { createServiceClient } = require("./lib/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") {
@@ -11,6 +6,7 @@ exports.handler = async (event) => {
   }
 
   try {
+    const supabase = createServiceClient();
     const { userId } = event.queryStringParameters;
 
     if (!userId) {

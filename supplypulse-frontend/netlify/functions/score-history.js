@@ -21,10 +21,10 @@ exports.handler = async (event) => {
     }
 
     const { data, error } = await supabase
-      .from("scores")
-      .select("score, risk, summary, alerts, news_signal, financial_signal, legal_signal, scored_at")
+      .from("supplier_scores")
+      .select("score, direction, summary, recommendations, created_at")
       .eq("supplier_id", supplierId)
-      .order("scored_at", { ascending: true })
+      .order("created_at", { ascending: true })
       .limit(30);
 
     if (error) {

@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   if (method === "GET") {
     const { data, error } = await supabase
       .from("suppliers")
-      .select("*, scores(score, risk, scored_at)")
+      .select("*, supplier_scores(score, direction, created_at)")
       .eq("user_id", user.id)  // use verified user.id, not query param
       .order("created_at", { ascending: false });
 

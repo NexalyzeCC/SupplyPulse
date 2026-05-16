@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+const { createAnonClient } = require("./lib/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -11,6 +6,7 @@ exports.handler = async (event) => {
   }
 
   try {
+    const supabase = createAnonClient();
     const { email, password } = JSON.parse(event.body);
 
     const { data, error } = await supabase.auth.signInWithPassword({

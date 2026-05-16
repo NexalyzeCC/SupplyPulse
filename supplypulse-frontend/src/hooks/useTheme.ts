@@ -27,7 +27,7 @@ export function useTheme() {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const resolved: Theme = stored ?? (prefersDark ? "dark" : "light");
-    setTheme(resolved);
+    queueMicrotask(() => setTheme(resolved));
     applyTheme(resolved);
   }, []);
 

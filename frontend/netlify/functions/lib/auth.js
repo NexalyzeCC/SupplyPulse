@@ -1,11 +1,7 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { createServiceClient } = require("./supabase");
 
 async function verifyUser(event) {
+  const supabase = createServiceClient();
   const authHeader = event.headers?.authorization || event.headers?.Authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
