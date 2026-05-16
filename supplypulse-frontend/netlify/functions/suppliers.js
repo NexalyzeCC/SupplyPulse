@@ -12,6 +12,13 @@
 const { createClient } = require("@supabase/supabase-js");
 const { verifyUser }   = require("./lib/auth");
 const { HEADERS, preflight } = require("./lib/cors");
+const {
+  sanitizeText,
+  sanitizeSupplierName,
+  sanitizeUrl,
+} = require("./lib/sanitize");
+
+const VALID_CRITICALITY = new Set(["low", "medium", "high", "critical"]);
 
 // ─── Tier limits ──────────────────────────────────────────────────────────────
 
@@ -102,6 +109,26 @@ exports.handler = async (event) => {
       return json(400, { error: "alert_threshold must be a number between 0 and 100" });
     }
 
+    if (criticality !== undefined && !VALID_CRITICALITY.has(criticality)) {
+      return json(400, { error: "criticality must be low, medium, high, or critical" });
+    }
+
+    // ── Sanitize all user-supplied strings ───────────────────────────────────
+    const cleanName = sanitizeSupplierName(name);
+    if (!cleanName) {
+      return json(400, { error: "name is invalid after sanitisation" });
+    }
+    const cleanCountry  = country  != null ? sanitizeText(country,  80) : null;
+    const cleanCategory = category != null ? sanitizeText(category, 80) : null;
+
+    let cleanSlack = null;
+    if (slack_webhook != null && slack_webhook !== "") {
+      cleanSlack = sanitizeUrl(slack_webhook);
+      if (!cleanSlack) {
+        return json(400, { error: "slack_webhook must be a valid http(s) URL" });
+      }
+    }
+
     const { data: sub } = await supabase
       .from("user_subscriptions")
       .select("tier, status")
@@ -126,12 +153,12 @@ exports.handler = async (event) => {
     const { data, error } = await supabase
       .from("suppliers")
       .insert({
-        name:            name.trim(),
-        country:         country         ?? null,
-        category:        category        ?? null,
+        name:            cleanName,
+        country:         cleanCountry,
+        category:        cleanCategory,
         criticality:     criticality     ?? "medium",
         alert_threshold: alert_threshold ?? 40,
-        slack_webhook:   slack_webhook   ?? null,
+        slack_webhook:   cleanSlack,
         user_id:         user.id,
       })
       .select()
@@ -178,6 +205,10 @@ exports.handler = async (event) => {
       return json(400, { error: "alert_threshold must be a number between 0 and 100" });
     }
 
+    if (criticality !== undefined && !VALID_CRITICALITY.has(criticality)) {
+      return json(400, { error: "criticality must be low, medium, high, or critical" });
+    }
+
     // ── Ownership check ──────────────────────────────────────────────────────
     const { data: existing, error: fetchErr } = await supabase
       .from("suppliers")
@@ -194,14 +225,34 @@ exports.handler = async (event) => {
       return json(404, { error: "Supplier not found or access denied" });
     }
 
-    // ── Build update payload (only include provided fields) ──────────────────
+    // ── Build update payload (only include provided fields, sanitised) ───────
     const updates = {};
-    if (name            !== undefined) updates.name            = name.trim();
-    if (country         !== undefined) updates.country         = country         ?? null;
-    if (category        !== undefined) updates.category        = category        ?? null;
+    if (name !== undefined) {
+      const cleanName = sanitizeSupplierName(name);
+      if (!cleanName) {
+        return json(400, { error: "name is invalid after sanitisation" });
+      }
+      updates.name = cleanName;
+    }
+    if (country !== undefined) {
+      updates.country = country != null ? sanitizeText(country, 80) : null;
+    }
+    if (category !== undefined) {
+      updates.category = category != null ? sanitizeText(category, 80) : null;
+    }
     if (criticality     !== undefined) updates.criticality     = criticality;
     if (alert_threshold !== undefined) updates.alert_threshold = alert_threshold;
-    if (slack_webhook   !== undefined) updates.slack_webhook   = slack_webhook   ?? null;
+    if (slack_webhook !== undefined) {
+      if (slack_webhook == null || slack_webhook === "") {
+        updates.slack_webhook = null;
+      } else {
+        const cleanSlack = sanitizeUrl(slack_webhook);
+        if (!cleanSlack) {
+          return json(400, { error: "slack_webhook must be a valid http(s) URL" });
+        }
+        updates.slack_webhook = cleanSlack;
+      }
+    }
 
     if (Object.keys(updates).length === 0) {
       return json(400, { error: "No fields to update" });

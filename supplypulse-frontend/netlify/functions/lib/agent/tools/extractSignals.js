@@ -15,33 +15,47 @@
 const OpenAI = require("openai");
 const { SYSTEM_PROMPT, EXTRACTION_PROMPT } = require("../prompts");
 const { validateSignals } = require("../../validation");
+const { logLLM } = require("../../logger");
 
 const openai = new OpenAI.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL = "gpt-4o-mini";
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 
 /**
  * @param {string} supplierName
  * @param {Array<{ title:string, url:string, content:string, publishedDate?:string }>} results
+ * @param {{ runId?:string, supplierId?:string }} [ctx]
  * @returns {Promise<Array<object>>}
  */
-async function extractSignals(supplierName, results) {
+async function extractSignals(supplierName, results, ctx = {}) {
   if (results.length === 0) {
     console.log("[extractSignals] No search results — skipping extraction");
     return [];
   }
 
+  const { runId, supplierId } = ctx;
   const userPrompt = EXTRACTION_PROMPT(supplierName, results);
 
+  const t0 = Date.now();
   try {
     const completion = await openai.chat.completions.create({
-      model:           "gpt-4o-mini",
+      model:           MODEL,
       response_format: { type: "json_object" },
       temperature:     0.2,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user",   content: userPrompt },
       ],
+    });
+
+    logLLM({
+      model:     MODEL,
+      step:      "extract",
+      supplierId,
+      runId,
+      usage:     completion.usage,
+      latencyMs: Date.now() - t0,
     });
 
     const text = completion.choices[0]?.message?.content ?? "[]";
@@ -59,6 +73,14 @@ async function extractSignals(supplierName, results) {
     console.log(`[extractSignals] Extracted ${validated.length} valid signals`);
     return validated;
   } catch (err) {
+    logLLM({
+      model:     MODEL,
+      step:      "extract",
+      supplierId,
+      runId,
+      usage:     null,
+      latencyMs: Date.now() - t0,
+    });
     console.error("[extractSignals] LLM error:", err.message);
     return [];
   }

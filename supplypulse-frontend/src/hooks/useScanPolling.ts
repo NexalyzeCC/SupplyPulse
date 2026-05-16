@@ -211,9 +211,25 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
     abortRef.current = abort;
 
     try {
+<<<<<<< Updated upstream
       const res = await fetch(apiUrl("score-supplier"), {
+=======
+      const token = await getAccessToken();
+      if (!token) {
+        setState({
+          kind:    "error",
+          message: "Your session expired. Please sign in again.",
+        });
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/.netlify/functions/score-supplier`, {
+>>>>>>> Stashed changes
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:  `Bearer ${token}`,
+        },
         body:    JSON.stringify({ supplierId }),
         signal:  abort.signal,
       });

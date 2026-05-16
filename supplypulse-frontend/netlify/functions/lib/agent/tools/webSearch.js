@@ -8,6 +8,8 @@
  * Returns: Array<{ title, url, content, publishedDate }>
  */
 
+const { logTool } = require("../../logger");
+
 const TIMEOUT_MS = 8_000;
 const MAX_RETRIES = 1;
 
@@ -84,16 +86,29 @@ async function searchSerper(query) {
 
 /**
  * @param {string} query
+ * @param {{ runId?:string, supplierId?:string }} [ctx]
  * @returns {Promise<Array<{ title: string, url: string, content: string, publishedDate: string|null }>>}
  */
-async function webSearch(query) {
+async function webSearch(query, ctx = {}) {
+  const { runId, supplierId } = ctx;
+  const t0 = Date.now();
   let lastError;
 
   // Try Tavily (with 1 retry)
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const results = await searchTavily(query);
-      if (results.length > 0) return results;
+      if (results.length > 0) {
+        logTool({
+          tool:      "webSearch",
+          step:      "search",
+          supplierId,
+          runId,
+          latencyMs: Date.now() - t0,
+          success:   true,
+        });
+        return results;
+      }
       // Empty results — fall through to Serper
       break;
     } catch (err) {
@@ -108,14 +123,35 @@ async function webSearch(query) {
   if (process.env.SERPER_API_KEY) {
     try {
       const results = await searchSerper(query);
-      if (results.length > 0) return results;
+      if (results.length > 0) {
+        logTool({
+          tool:      "webSearch",
+          step:      "search",
+          supplierId,
+          runId,
+          latencyMs: Date.now() - t0,
+          success:   true,
+        });
+        return results;
+      }
     } catch (err) {
+      lastError = err;
       console.warn("[webSearch] Serper fallback failed:", err.message);
     }
   }
 
-  // Both providers exhausted — return empty rather than throwing
+  // Both providers exhausted — return empty rather than throwing (preserves
+  // graceful degradation; loop.js can still proceed with fewer signals).
   console.warn("[webSearch] All providers returned empty for query:", query, lastError?.message);
+  logTool({
+    tool:      "webSearch",
+    step:      "search",
+    supplierId,
+    runId,
+    latencyMs: Date.now() - t0,
+    success:   false,
+    error:     lastError?.message || "no results from any provider",
+  });
   return [];
 }
 

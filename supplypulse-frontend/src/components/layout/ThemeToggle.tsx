@@ -23,6 +23,7 @@ export default function ThemeToggle() {
         hover:bg-slate-100 hover:text-slate-700
         dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200
       "
+      suppressHydrationWarning
     >
       {theme === "dark" ? (
         <Sun className="h-4 w-4" />

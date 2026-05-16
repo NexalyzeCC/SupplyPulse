@@ -9,6 +9,15 @@
  */
 
 const { z } = require("zod");
+const { sanitizeUrl } = require("./sanitize");
+
+// Accepts a URL string only if it parses AND uses http(s); otherwise null.
+// Wrap inside a Zod schema so SignalSchema can stay declarative.
+const SafeUrlNullable = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((v) => (typeof v === "string" ? sanitizeUrl(v) : null))
+  .pipe(z.string().url().nullable())
+  .catch(null);
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -43,7 +52,9 @@ const SignalSchema = z.object({
   type:         SignalTypeEnum.catch("news"),
   severity:     SeverityEnum.catch("low"),
   summary:      z.string().min(1).max(500).catch(""),
-  source_url:   z.string().url().nullable().catch(null),
+  // SafeUrlNullable rejects javascript:, data:, file:, etc. — prevents XSS
+  // when source_url is rendered as <a href={...}> on the client.
+  source_url:   SafeUrlNullable,
   source_title: z.string().max(300).nullable().catch(null),
   signal_date:  z
     .string()

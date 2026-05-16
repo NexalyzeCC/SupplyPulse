@@ -12,12 +12,15 @@
  * Returns: { status: "complete"|"skipped", scoreId, score, direction }
  */
 
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { webSearch }       = require("./tools/webSearch");
 const { extractSignals }  = require("./tools/extractSignals");
 const { synthesizeScore } = require("./tools/synthesizeScore");
 const { persistScore }    = require("./tools/persistScore");
 const { sendAlert }       = require("./tools/sendAlert");
+const { logEvent }        = require("../logger");
+const { sanitizeText, sanitizeSupplierName } = require("../sanitize");
 
 // ─── Supabase (service role for reads the anon key can't do) ─────────────────
 
@@ -30,20 +33,6 @@ function getServiceClient() {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Strips characters that could pollute a search query.
- * Moved here from score-supplier.js per task spec.
- * @param {string} name
- * @returns {string}
- */
-function sanitizeSupplierName(name) {
-  return name
-    .replace(/[^\w\s,.\-&]/g, " ") // keep alphanumeric, spaces, common punctuation
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 100);
-}
 
 /**
  * Generates 5 targeted search queries for a supplier.
@@ -139,80 +128,119 @@ async function runAgentLoop(supplierId, opts = {}) {
   const { forceRefresh = false } = opts;
   const supabase = getServiceClient();
 
-  // ── Step 0: Fetch supplier profile ──────────────────────────────────────────
-  const supplier = await fetchSupplier(supabase, supplierId);
-  console.log(`[loop] Starting agent for supplier: ${supplier.name} (${supplierId})`);
+  // ── Run identity + timing for structured logs ────────────────────────────────
+  const runId   = crypto.randomUUID();
+  const startMs = Date.now();
+  const ctx     = { runId, supplierId };
 
-  // ── Step 1: Idempotency guard ────────────────────────────────────────────────
-  if (!forceRefresh) {
-    const cached = await checkTodayIdempotency(supabase, supplierId);
-    if (cached.exists) {
-      console.log(`[loop] Score already exists today — skipping (scoreId: ${cached.scoreId})`);
-      return {
-        status:    "skipped",
-        scoreId:   cached.scoreId,
-        score:     cached.score,
-        direction: cached.direction,
-      };
+  logEvent("agent_run_start", { run_id: runId, supplier_id: supplierId });
+
+  try {
+    // ── Step 0: Fetch supplier profile ────────────────────────────────────────
+    const supplier = await fetchSupplier(supabase, supplierId);
+    console.log(`[loop] Starting agent for supplier: ${supplier.name} (${supplierId})`);
+
+    // ── Step 1: Idempotency guard ─────────────────────────────────────────────
+    if (!forceRefresh) {
+      const cached = await checkTodayIdempotency(supabase, supplierId);
+      if (cached.exists) {
+        console.log(`[loop] Score already exists today — skipping (scoreId: ${cached.scoreId})`);
+        logEvent("agent_run_end", {
+          run_id:      runId,
+          supplier_id: supplierId,
+          status:      "skipped",
+          score:       cached.score,
+          duration_ms: Date.now() - startMs,
+        });
+        return {
+          status:    "skipped",
+          scoreId:   cached.scoreId,
+          score:     cached.score,
+          direction: cached.direction,
+        };
+      }
     }
+
+    // Use caller-supplied name if provided (avoids an extra DB round-trip when
+    // the HTTP handler already validated it), otherwise fall back to DB value.
+    // Sanitize every external string before it touches a search query or prompt.
+    const rawName  = opts.supplierName ?? supplier.name;
+    const name     = sanitizeSupplierName(rawName);
+    const country  = opts.country  != null ? sanitizeText(opts.country,  80) :
+                     supplier.country != null ? sanitizeText(supplier.country, 80) : null;
+    const category = opts.category != null ? sanitizeText(opts.category, 80) :
+                     supplier.category != null ? sanitizeText(supplier.category, 80) : null;
+
+    // ── Step 2: Parallel web searches ────────────────────────────────────────
+    const queries = generateQueries(name, country, category);
+    console.log(`[loop] Running ${queries.length} parallel searches`);
+
+    const searchResults = await Promise.allSettled(queries.map((q) => webSearch(q, ctx)));
+
+    const allResults = searchResults.flatMap((r, i) => {
+      if (r.status === "fulfilled") return r.value;
+      console.warn(`[loop] Query ${i} failed: ${r.reason?.message}`);
+      return [];
+    });
+
+    console.log(`[loop] Retrieved ${allResults.length} total results`);
+
+    // ── Step 3: Extract signals ──────────────────────────────────────────────
+    const signals = await extractSignals(name, allResults, ctx);
+    console.log(`[loop] Extracted ${signals.length} signals`);
+
+    // ── Step 4: Synthesize score ─────────────────────────────────────────────
+    const scoreResult = await synthesizeScore(
+      signals,
+      {
+        name:        supplier.name,
+        country:     supplier.country,
+        category:    supplier.category,
+        criticality: supplier.criticality,
+      },
+      ctx,
+    );
+
+    // ── Step 5: Persist score + signals ──────────────────────────────────────
+    const { scoreId } = await persistScore(supplierId, scoreResult, signals, ctx);
+    console.log(`[loop] Persisted score ${scoreResult.score} (id: ${scoreId})`);
+
+    // ── Step 6: Alert if needed ──────────────────────────────────────────────
+    const alertResult = await sendAlert(
+      supplier,
+      scoreResult,
+      scoreId,
+      signals,
+    );
+
+    if (alertResult.alerted) {
+      console.log(`[loop] Alert sent via: ${alertResult.channels.join(", ")}`);
+    }
+
+    logEvent("agent_run_end", {
+      run_id:      runId,
+      supplier_id: supplierId,
+      status:      "complete",
+      score:       scoreResult.score,
+      duration_ms: Date.now() - startMs,
+    });
+
+    return {
+      status:    "complete",
+      scoreId,
+      score:     scoreResult.score,
+      direction: scoreResult.direction,
+    };
+  } catch (err) {
+    logEvent("agent_run_end", {
+      run_id:      runId,
+      supplier_id: supplierId,
+      status:      "failed",
+      error:       err.message,
+      duration_ms: Date.now() - startMs,
+    });
+    throw err;
   }
-
-  // Use caller-supplied name if provided (avoids an extra DB round-trip when
-  // the HTTP handler already validated it), otherwise fall back to DB value.
-  const rawName = opts.supplierName ?? supplier.name;
-  const name    = sanitizeSupplierName(rawName);
-  const country  = opts.country   ?? supplier.country  ?? null;
-  const category = opts.category  ?? supplier.category ?? null;
-
-  // ── Step 2: Parallel web searches ───────────────────────────────────────────
-  const queries = generateQueries(name, country, category);
-  console.log(`[loop] Running ${queries.length} parallel searches`);
-
-  const searchResults = await Promise.allSettled(queries.map((q) => webSearch(q)));
-
-  // Flatten fulfilled results; log errors for failed queries
-  const allResults = searchResults.flatMap((r, i) => {
-    if (r.status === "fulfilled") return r.value;
-    console.warn(`[loop] Query ${i} failed: ${r.reason?.message}`);
-    return [];
-  });
-
-  console.log(`[loop] Retrieved ${allResults.length} total results`);
-
-  // ── Step 3: Extract signals ──────────────────────────────────────────────────
-  const signals = await extractSignals(name, allResults);
-  console.log(`[loop] Extracted ${signals.length} signals`);
-
-  // ── Step 4: Synthesize score ─────────────────────────────────────────────────
-  const scoreResult = await synthesizeScore(signals, {
-    name:        supplier.name,
-    country:     supplier.country,
-    category:    supplier.category,
-    criticality: supplier.criticality,
-  });
-
-  // ── Step 5: Persist score + signals ─────────────────────────────────────────
-  const { scoreId } = await persistScore(supplierId, scoreResult, signals);
-  console.log(`[loop] Persisted score ${scoreResult.score} (id: ${scoreId})`);
-
-  // ── Step 6: Alert if needed ──────────────────────────────────────────────────
-  const alertResult = await sendAlert(
-    supplier,
-    scoreResult,  // { score, direction, summary, recommendations }
-    scoreId,
-    signals,      // pass signals so the template can render the top 3
-  );
-
-  if (alertResult.alerted) {
-    console.log(`[loop] Alert sent via: ${alertResult.channels.join(", ")}`);
-  }
-
-  return {
-    status:    "complete",
-    scoreId,
-    score:     scoreResult.score,
-    direction: scoreResult.direction,
-  };
 }
 
-module.exports = { runAgentLoop, sanitizeSupplierName };
+module.exports = { runAgentLoop };

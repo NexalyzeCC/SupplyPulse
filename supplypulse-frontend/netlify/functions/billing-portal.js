@@ -47,7 +47,7 @@ exports.handler = async (event) => {
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: `${appUrl}/dashboard`,
+      return_url: `${appUrl}/profile`,
     });
 
     return {

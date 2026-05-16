@@ -196,16 +196,19 @@ export default function RecommendationPanel({
     ? [...recommendations].sort((a, b) => a.priority - b.priority)
     : [];
 
-  // Local "done" tracking — visual only, no persistence in v1
+  // Local "done" tracking — visual only, no persistence in v1.
+  // Keyed by index in the sorted list because the LLM can return multiple
+  // recommendations sharing the same `priority` value, so priority is not a
+  // safe identity key (it would visually toggle siblings together).
   const [done, setDone] = useState<Set<number>>(new Set());
 
-  function toggleDone(priority: number) {
+  function toggleDone(index: number) {
     setDone((prev) => {
       const next = new Set(prev);
-      if (next.has(priority)) {
-        next.delete(priority);
+      if (next.has(index)) {
+        next.delete(index);
       } else {
-        next.add(priority);
+        next.add(index);
       }
       return next;
     });
@@ -285,12 +288,12 @@ export default function RecommendationPanel({
         ) : (
           <>
             <ol className="space-y-2.5" aria-label="Recommended actions">
-              {sorted.map((rec) => (
+              {sorted.map((rec, i) => (
                 <RecommendationItem
-                  key={rec.priority}
+                  key={`${rec.priority}-${i}`}
                   rec={rec}
-                  done={done.has(rec.priority)}
-                  onToggleDone={() => toggleDone(rec.priority)}
+                  done={done.has(i)}
+                  onToggleDone={() => toggleDone(i)}
                 />
               ))}
             </ol>

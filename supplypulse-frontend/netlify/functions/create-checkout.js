@@ -87,8 +87,8 @@ exports.handler = async (event) => {
       client_reference_id: user.id,
       metadata: { user_id: user.id },
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${appUrl}/dashboard?upgraded=1`,
-      cancel_url: `${appUrl}/dashboard?canceled=1`,
+      success_url: `${appUrl}/profile?upgraded=1`,
+      cancel_url: `${appUrl}/profile?canceled=1`,
     });
 
     return {

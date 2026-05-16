@@ -202,7 +202,27 @@ export default function SupplierForm({
     setSubmitting(true);
     setServerError(null);
 
+    // Route through the Netlify function so tier limits + sanitisation + RLS
+    // (user_id stamping under service role) are enforced server-side. The
+    // browser anon-key client can't satisfy `user_id = auth.uid()` WITH CHECK
+    // because the payload never carries the user id.
     const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token ?? null;
+
+    if (!token) {
+      const msg = "Your session expired. Please sign in again.";
+      setServerError(msg);
+      toast.error("Not signed in", { description: msg });
+      setSubmitting(false);
+      router.push("/login");
+      return;
+    }
+
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+    const url = `${API_BASE}/.netlify/functions/suppliers`;
     const payload = {
       name: values.name.trim(),
       country: values.country || null,
@@ -212,46 +232,65 @@ export default function SupplierForm({
       slack_webhook: values.slack_webhook.trim() || null,
     };
 
-    if (isEdit) {
-      // ── Edit mode: update existing row ──
-      const { error } = await supabase
-        .from("suppliers")
-        .update(payload)
-        .eq("id", supplier.id);
-
-      if (error) {
-        setServerError(error.message);
-        toast.error("Failed to save changes", { description: error.message });
-        setSubmitting(false);
-        return;
-      }
-
-      toast.success("Changes saved", {
-        description: `${values.name.trim()} has been updated.`,
+    try {
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(
+          isEdit ? { supplierId: supplier.id, ...payload } : payload,
+        ),
       });
-      router.push(`/suppliers/${supplier.id}`);
-      router.refresh();
-    } else {
-      // ── Create mode: insert new row, get back the id ──
-      const { data, error } = await supabase
-        .from("suppliers")
-        .insert(payload)
-        .select("id")
-        .single();
 
-      if (error || !data) {
-        const msg = error?.message ?? "Unexpected error. Please try again.";
+      const data = (await res.json().catch(() => ({}))) as {
+        id?: string;
+        error?: string;
+        tier?: string;
+        limit?: number;
+      };
+
+      if (!res.ok) {
+        let msg = data.error ?? `Request failed (HTTP ${res.status}).`;
+        if (data.error === "supplier_limit_reached") {
+          msg = `You've reached the ${data.tier ?? "current"}-tier limit of ${
+            data.limit ?? "—"
+          } suppliers. Upgrade to add more.`;
+        }
         setServerError(msg);
-        toast.error("Failed to add supplier", { description: msg });
+        toast.error(
+          isEdit ? "Failed to save changes" : "Failed to add supplier",
+          { description: msg },
+        );
         setSubmitting(false);
         return;
       }
 
-      toast.success("Supplier added", {
-        description: `${values.name.trim()} is on your watchlist. Trigger a scan to generate a risk score.`,
-      });
-      router.push("/dashboard");
-      router.refresh();
+      if (isEdit) {
+        toast.success("Changes saved", {
+          description: `${values.name.trim()} has been updated.`,
+        });
+        router.push(`/suppliers/${supplier.id}`);
+        router.refresh();
+      } else {
+        toast.success("Supplier added", {
+          description: `${values.name.trim()} is on your watchlist. Trigger a scan to generate a risk score.`,
+        });
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Network error. Please try again.";
+      setServerError(msg);
+      toast.error(
+        isEdit ? "Failed to save changes" : "Failed to add supplier",
+        { description: msg },
+      );
+      setSubmitting(false);
     }
   }
 

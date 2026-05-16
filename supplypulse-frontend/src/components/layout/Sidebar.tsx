@@ -9,9 +9,11 @@ import {
   ShieldCheck,
   LogOut,
   ChevronRight,
+  UserCircle,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { PLANS, type Tier } from "@/lib/plans";
 
 // ─── Nav items ───────────────────────────────────────────────────────────────
 
@@ -19,6 +21,7 @@ const NAV_ITEMS = [
   { label: "Dashboard",    href: "/dashboard",      icon: LayoutDashboard },
   { label: "Add Supplier", href: "/suppliers/new",  icon: Plus            },
   { label: "Alerts",       href: "/alerts",          icon: Bell            },
+  { label: "Profile",      href: "/profile",         icon: UserCircle      },
 ] as const;
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -26,6 +29,8 @@ const NAV_ITEMS = [
 interface SidebarProps {
   /** Resolved server-side — avoids client-flash on first render. */
   email: string | null;
+  /** Subscription tier, drives the plan label under the user's email. */
+  tier:  Tier;
   /** Whether the sidebar drawer is open on mobile. */
   isOpen: boolean;
   /** Called when the user requests the sidebar to close on mobile. */
@@ -34,7 +39,7 @@ interface SidebarProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function Sidebar({ email, isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -123,25 +128,32 @@ export default function Sidebar({ email, isOpen, onClose }: SidebarProps) {
 
       {/* ── User + sign-out ── */}
       <div className="shrink-0 px-3 py-4">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          {/* Avatar */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-slate-200 ring-1 ring-slate-600">
-            {initials}
-          </div>
-
-          {/* Email */}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-slate-300">
-              {email ?? "Not signed in"}
-            </p>
-            <p className="text-[10px] text-slate-500">Free plan</p>
-          </div>
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-slate-800/60">
+          {/* Avatar + email — entire block links to profile */}
+          <Link
+            href="/profile"
+            aria-label="Open profile"
+            className="flex min-w-0 flex-1 items-center gap-3"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-slate-200 ring-1 ring-slate-600">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-slate-300">
+                {email ?? "Not signed in"}
+              </p>
+              <p className="text-[10px] text-slate-500">
+                {PLANS[tier].name} plan
+              </p>
+            </div>
+          </Link>
 
           {/* Sign out */}
           <button
             onClick={handleSignOut}
             title="Sign out"
             className="ml-auto shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+            suppressHydrationWarning
           >
             <LogOut className="h-4 w-4" />
           </button>

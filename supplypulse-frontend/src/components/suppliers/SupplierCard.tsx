@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Clock, Pencil } from "lucide-react";
 import ScanButton from "@/components/suppliers/ScanButton";
 import {
   getScoreColor,
@@ -206,6 +206,17 @@ export default function SupplierCard({ supplier }: Props) {
             <div onClick={(e) => e.stopPropagation()}>
               <ScanButton supplierId={supplier.id} size="sm" />
             </div>
+
+            {/* Quick edit — skips the detail page */}
+            <Link
+              href={`/suppliers/${supplier.id}/edit`}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Edit ${supplier.name}`}
+              title="Edit supplier"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Link>
 
             {/* View details — visible CTA above the card-link overlay */}
             <Link

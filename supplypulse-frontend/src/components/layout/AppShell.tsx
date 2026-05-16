@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import type { Tier } from "@/lib/plans";
 
 interface AppShellProps {
   email: string | null;
+  /** Subscription tier — drives the plan label in the sidebar. */
+  tier:  Tier;
   /** <AuthButton /> server component passed as a slot from the server layout. */
   auth: React.ReactNode;
   children: React.ReactNode;
@@ -17,7 +20,7 @@ interface AppShellProps {
  * This allows Sidebar and Header to share the toggle without turning
  * the server layout into a client component.
  */
-export default function AppShell({ email, auth, children }: AppShellProps) {
+export default function AppShell({ email, tier, auth, children }: AppShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -59,6 +62,7 @@ export default function AppShell({ email, auth, children }: AppShellProps) {
       {/* ── Sidebar ── */}
       <Sidebar
         email={email}
+        tier={tier}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

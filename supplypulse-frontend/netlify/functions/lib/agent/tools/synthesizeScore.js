@@ -11,28 +11,42 @@
 const OpenAI = require("openai");
 const { SYSTEM_PROMPT, SYNTHESIS_PROMPT } = require("../prompts");
 const { validateScoreOutput } = require("../../validation");
+const { logLLM } = require("../../logger");
 
 const openai = new OpenAI.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL = "gpt-4o";
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 
 /**
  * @param {Array<object>} signals   — validated signal objects
  * @param {{ name:string, country:string|null, category:string|null, criticality:string }} supplier
+ * @param {{ runId?:string, supplierId?:string }} [ctx]
  * @returns {Promise<{ score:number, direction:string, summary:string, recommendations:Array }>}
  */
-async function synthesizeScore(signals, supplier) {
+async function synthesizeScore(signals, supplier, ctx = {}) {
+  const { runId, supplierId } = ctx;
   const userPrompt = SYNTHESIS_PROMPT(signals, supplier);
 
+  const t0 = Date.now();
   try {
     const completion = await openai.chat.completions.create({
-      model:           "gpt-4o",
+      model:           MODEL,
       response_format: { type: "json_object" },
       temperature:     0.3,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user",   content: userPrompt },
       ],
+    });
+
+    logLLM({
+      model:     MODEL,
+      step:      "synthesize",
+      supplierId,
+      runId,
+      usage:     completion.usage,
+      latencyMs: Date.now() - t0,
     });
 
     const text = completion.choices[0]?.message?.content ?? "{}";
@@ -50,6 +64,14 @@ async function synthesizeScore(signals, supplier) {
     console.log(`[synthesizeScore] Score ${result.score}, direction: ${result.direction}`);
     return result;
   } catch (err) {
+    logLLM({
+      model:     MODEL,
+      step:      "synthesize",
+      supplierId,
+      runId,
+      usage:     null,
+      latencyMs: Date.now() - t0,
+    });
     console.error("[synthesizeScore] LLM error:", err.message);
     // Return a safe default so the pipeline can still persist something
     return {
