@@ -1,7 +1,6 @@
 [build]
-  base      = "supplypulse-frontend"
-  command   = "npm run build"
-  publish   = "supplypulse-frontend/.next"
+  command = "npm run build"
+  publish = ".next"
 
 [dev]
   command    = "npm run dev"
@@ -10,12 +9,12 @@
   framework  = "#custom"
 
 [functions]
-  directory    = "supplypulse-frontend/netlify/functions"
+  directory    = "netlify/functions"
   node_bundler = "esbuild"
 
 [[redirects]]
-  from = "/api/*"
-  to   = "/.netlify/functions/:splat"
+  from   = "/api/*"
+  to     = "/.netlify/functions/:splat"
   status = 200
 
 [[scheduled_functions]]
