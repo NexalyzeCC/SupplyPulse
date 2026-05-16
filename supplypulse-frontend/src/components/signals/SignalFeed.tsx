@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Radio,
 } from "lucide-react";
-import { getSeverityColor, getSignalTypeLabel, formatDate } from "@/lib/utils";
+import { getSignalTypeLabel, formatDate } from "@/lib/utils";
 import type { Signal } from "@/lib/types/types";
 import EmptyState from "@/components/common/EmptyState";
 import SignalBadge from "@/components/signals/SignalBadge";
@@ -81,7 +81,6 @@ function ConfidenceBar({ value }: { value: number }) {
 // ─── Signal card ──────────────────────────────────────────────────────────────
 
 function SignalCard({ signal }: { signal: Signal }) {
-  const sev = getSeverityColor(signal.severity);
   const type = TYPE_META[signal.type];
   const TypeIcon = type.icon;
 
@@ -112,7 +111,6 @@ function SignalCard({ signal }: { signal: Signal }) {
             <TypeIcon className="h-3.5 w-3.5" aria-hidden />
           </div>
 
-          {/* Type label + severity badge */}
           <div className="flex flex-wrap items-center gap-1.5">
             <SignalBadge type={signal.type} severity={signal.severity} />
           </div>

@@ -203,9 +203,9 @@ export default function SupplierCard({ supplier }: Props) {
           </span>
 
           <div className="relative z-10 flex items-center gap-2">
-            <span onClick={(e) => e.stopPropagation()}>
+            <div onClick={(e) => e.stopPropagation()}>
               <ScanButton supplierId={supplier.id} size="sm" />
-            </span>
+            </div>
 
             {/* View details — visible CTA above the card-link overlay */}
             <Link

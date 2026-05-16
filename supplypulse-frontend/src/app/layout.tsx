@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
+import { cookies } from "next/headers";
 import { Toaster } from "sonner";
+import ThemeProvider from "@/components/layout/ThemeProvider";
+import { THEME_COOKIE_NAME } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,39 +22,23 @@ export const metadata: Metadata = {
     "Monitor your supplier watchlist with AI. Get a dynamic 0–100 health score, risk trajectory, and action plan in under 60 seconds.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const isDark = themeCookie === "dark";
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased${isDark ? " dark" : ""}`}
       suppressHydrationWarning
     >
-      <head>
-        {/*
-         * Runs synchronously before first paint so the `dark` class is present
-         * on <html> before any CSS is applied — preventing FOUC for dark-mode
-         * users. next/script with strategy="beforeInteractive" is the correct
-         * way to inject blocking scripts in Next.js App Router.
-         */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('sp-theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
-      {/*
-       * The body is a full-height flex row so that authenticated pages can
-       * slot a fixed-width sidebar alongside a scrollable main column.
-       * Public pages (landing, auth) ignore the row context and span full
-       * width by simply not rendering a sidebar.
-       */}
       <body className="flex h-full min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <ThemeProvider />
         {children}
         <Toaster
           position="bottom-right"

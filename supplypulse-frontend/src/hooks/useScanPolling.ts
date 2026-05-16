@@ -3,16 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { apiUrl } from "@/lib/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const POLL_INTERVAL_MS = 5_000;            // 5 s between polls
 export const POLL_TIMEOUT_MS  = 3 * 60 * 1_000;  // 3-minute hard stop
-
-// Empty string = same-origin (correct for Netlify co-deploy).
-// Set NEXT_PUBLIC_API_URL to a full origin (e.g. https://api.example.com)
-// when the functions are hosted on a different domain.
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 export const MAX_POLLS        = POLL_TIMEOUT_MS / POLL_INTERVAL_MS; // 36
 
 // ─── API response type ────────────────────────────────────────────────────────
@@ -85,7 +81,7 @@ async function runPollLoop(
       : {};
 
     const res = await fetch(
-      `${API_BASE}/.netlify/functions/score-status?id=${encodeURIComponent(supplierId)}`,
+      apiUrl("score-status", { id: supplierId }),
       { headers, signal: abort.signal },
     );
 
@@ -215,7 +211,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
     abortRef.current = abort;
 
     try {
-      const res = await fetch(`${API_BASE}/.netlify/functions/score-supplier`, {
+      const res = await fetch(apiUrl("score-supplier"), {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ supplierId }),
