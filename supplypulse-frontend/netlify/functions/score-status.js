@@ -17,20 +17,24 @@
 
 const { createClient }  = require("@supabase/supabase-js");
 const { verifyUser }    = require("./lib/auth");
+const { HEADERS, preflight } = require("./lib/cors");
 
 const RECENT_WINDOW_MS = 5 * 60 * 1_000; // 5 minutes
 
 function json(statusCode, body) {
   return {
     statusCode,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   };
 }
 
 exports.handler = async (event) => {
+  const pre = preflight(event);
+  if (pre) return pre;
+
   if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { statusCode: 405, headers: HEADERS, body: "Method Not Allowed" };
   }
 
   // ── Auth ───────────────────────────────────────────────────────────────────

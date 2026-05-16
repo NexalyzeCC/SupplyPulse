@@ -1,6 +1,40 @@
+[build]
+  command = "echo 'no frontend build in this repo'"
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "20"
+
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # Bundle the lib/agent folder explicitly so esbuild includes it
+  included_files = ["netlify/functions/lib/**"]
+  external_node_modules = ["stripe", "resend"]
+
+# Stripe webhook needs raw body — disable Netlify's automatic parsing.
+# (Body is read via event.body + event.isBase64Encoded inside the handler.)
+[functions."stripe-webhook"]
+  included_files = ["netlify/functions/lib/**"]
+
+# Friendlier URL shape: /api/* maps to functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
 
 [[scheduled_functions]]
   function = "scheduled-scan"
   schedule = "0 6 * * *"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    # Replace with your actual frontend URL in production, or "*" for dev
+    Access-Control-Allow-Origin = "https://supplypulse-frontend.netlify.app"
+    Access-Control-Allow-Headers = "Authorization, Content-Type, Stripe-Signature"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Credentials = "true"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
