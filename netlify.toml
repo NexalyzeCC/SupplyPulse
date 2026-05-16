@@ -1,0 +1,23 @@
+[build]
+  base    = "supplypulse-frontend"
+  command = "npm run build"
+  publish = "supplypulse-frontend/.next"
+
+[build.environment]
+  NPM_FLAGS = "--include=dev"
+
+[functions]
+  directory    = "supplypulse-frontend/netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/:splat"
+  status = 200
+
+[[scheduled_functions]]
+  function = "scheduled-scan"
+  schedule = "0 6 * * *"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
