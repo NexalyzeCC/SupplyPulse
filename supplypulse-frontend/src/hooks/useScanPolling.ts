@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { apiUrl } from "@/lib/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,7 @@ async function runPollLoop(
       : {};
 
     const res = await fetch(
-      `/.netlify/functions/score-status?id=${encodeURIComponent(supplierId)}`,
+      apiUrl("score-status", { id: supplierId }),
       { headers, signal: abort.signal },
     );
 
@@ -210,7 +211,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
     abortRef.current = abort;
 
     try {
-      const res = await fetch("/.netlify/functions/score-supplier", {
+      const res = await fetch(apiUrl("score-supplier"), {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ supplierId }),

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
+
+const themeInitScript = `(function(){try{var t=localStorage.getItem('sp-theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,28 +32,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        {/*
-         * Runs synchronously before first paint so the `dark` class is present
-         * on <html> before any CSS is applied — preventing FOUC for dark-mode
-         * users. next/script with strategy="beforeInteractive" is the correct
-         * way to inject blocking scripts in Next.js App Router.
-         */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('sp-theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
       {/*
-       * The body is a full-height flex row so that authenticated pages can
-       * slot a fixed-width sidebar alongside a scrollable main column.
-       * Public pages (landing, auth) ignore the row context and span full
-       * width by simply not rendering a sidebar.
+       * Blocking inline script (root layout only). Runs before paint so the
+       * `dark` class is on <html>` before CSS — avoids FOUC. A native <script>
+       * here is supported in App Router; next/script beforeInteractive triggers
+       * React 19 warnings when rendered on the client.
        */}
       <body className="flex h-full min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {children}
         <Toaster
           position="bottom-right"
