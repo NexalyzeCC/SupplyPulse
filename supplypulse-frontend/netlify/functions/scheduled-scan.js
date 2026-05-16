@@ -1,4 +1,3 @@
-const { schedule } = require("@netlify/functions");
 const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
@@ -48,4 +47,4 @@ const handler = async () => {
   return { statusCode: 200 };
 };
 
-exports.handler = schedule("0 6 * * *", handler);
+exports.handler = handler;

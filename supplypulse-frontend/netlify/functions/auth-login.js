@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const { HEADERS, preflight } = require("./lib/cors");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -6,8 +7,11 @@ const supabase = createClient(
 );
 
 exports.handler = async (event) => {
+  const pre = preflight(event);
+  if (pre) return pre;
+
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { statusCode: 405, headers: HEADERS, body: "Method Not Allowed" };
   }
 
   try {
@@ -19,17 +23,26 @@ exports.handler = async (event) => {
     });
 
     if (error) {
-      return { statusCode: 401, body: JSON.stringify({ error: error.message }) };
+      return {
+        statusCode: 401,
+        headers: HEADERS,
+        body: JSON.stringify({ error: error.message })
+      };
     }
 
     return {
       statusCode: 200,
+      headers: HEADERS,
       body: JSON.stringify({
         user: data.user,
         session: data.session  // contains access_token the frontend uses
       })
     };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers: HEADERS,
+      body: JSON.stringify({ error: err.message })
+    };
   }
 };
