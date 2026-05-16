@@ -23,21 +23,22 @@
     "resend": "^4.8.0",
     "sonner": "^2.0.7",
     "stripe": "^17.7.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@tailwindcss/postcss": "^4",
+    "lightningcss": "^1.32.0",
+    "tailwindcss": "^4"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.11",
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "lightningcss": "^1.32.0",
-    "tailwindcss": "^4",
     "typescript": "^5"
   },
   "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.0",
     "lightningcss-linux-x64-gnu": "1.32.0"
   }
 }
