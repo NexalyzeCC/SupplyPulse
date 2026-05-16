@@ -167,8 +167,7 @@ function SignalCard({ signal }: { signal: Signal }) {
 
 // ─── Type filter pill ─────────────────────────────────────────────────────────
 
-const ALL_TYPES = ["all", ...Object.keys(TYPE_META)] as const;
-type FilterType = (typeof ALL_TYPES)[number];
+type FilterType = "all" | Signal["type"];
 
 function FilterPill({
   value,
