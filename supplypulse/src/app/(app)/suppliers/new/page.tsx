@@ -1,0 +1,5 @@
+import SupplierForm from "@/components/suppliers/SupplierForm";
+
+export default function NewSupplierPage() {
+  return <SupplierForm />;
+}
