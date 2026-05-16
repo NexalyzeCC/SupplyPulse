@@ -11,6 +11,7 @@
 
 const { createClient } = require("@supabase/supabase-js");
 const { verifyUser }   = require("./lib/auth");
+const { HEADERS, preflight } = require("./lib/cors");
 
 // ─── Tier limits ──────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ const TIER_LIMITS = {
 function json(statusCode, body) {
   return {
     statusCode,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   };
 }
@@ -38,46 +39,12 @@ function getServiceClient() {
   );
 }
 
-/**
- * Returns the user's tier from `user_profiles`. Defaults to "starter" so
- * we fail-safe (restrictive) if the profile row is missing.
- * @param {import("@supabase/supabase-js").SupabaseClient} supabase
- * @param {string} userId
- * @returns {Promise<string>}
- */
-async function getUserTier(supabase, userId) {
-  try {
-    const { data } = await supabase
-      .from("user_profiles")
-      .select("tier")
-      .eq("id", userId)
-      .maybeSingle();
-
-    return data?.tier ?? "starter";
-  } catch {
-    return "starter";
-  }
-}
-
-/**
- * Counts how many suppliers the user currently owns.
- * @param {import("@supabase/supabase-js").SupabaseClient} supabase
- * @param {string} userId
- * @returns {Promise<number>}
- */
-async function countSuppliers(supabase, userId) {
-  const { count, error } = await supabase
-    .from("suppliers")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
-
-  if (error) throw new Error(error.message);
-  return count ?? 0;
-}
-
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
+  const pre = preflight(event);
+  if (pre) return pre;
+
   // ── Auth (all methods) ─────────────────────────────────────────────────────
   const { user, error: authError } = await verifyUser(event);
   if (!user) {
@@ -135,20 +102,23 @@ exports.handler = async (event) => {
       return json(400, { error: "alert_threshold must be a number between 0 and 100" });
     }
 
-    // ── Tier gate ────────────────────────────────────────────────────────────
-    const [tier, currentCount] = await Promise.all([
-      getUserTier(supabase, user.id),
-      countSuppliers(supabase, user.id),
-    ]);
+    const { data: sub } = await supabase
+      .from("user_subscriptions")
+      .select("tier, status")
+      .eq("user_id", user.id)
+      .single();
+    const tier = sub?.status === "active" ? (sub?.tier || "starter") : "starter";
 
-    const limit = TIER_LIMITS[tier] ?? TIER_LIMITS.starter;
+    const { count } = await supabase
+      .from("suppliers")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-    if (currentCount >= limit) {
+    if (count >= TIER_LIMITS[tier]) {
       return json(403, {
-        error: `Supplier limit reached for your ${tier} plan (${limit} max). Upgrade to add more.`,
-        code:  "TIER_LIMIT_EXCEEDED",
+        error: "supplier_limit_reached",
         tier,
-        limit,
+        limit: TIER_LIMITS[tier],
       });
     }
 
@@ -288,5 +258,5 @@ exports.handler = async (event) => {
     return json(200, { success: true });
   }
 
-  return { statusCode: 405, body: "Method Not Allowed" };
+  return { statusCode: 405, headers: HEADERS, body: "Method Not Allowed" };
 };

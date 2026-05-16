@@ -1,6 +1,8 @@
 const { verifyUser } = require("./lib/auth");
 const { createClient } = require("@supabase/supabase-js");
 
+const TIER_LIMITS = { starter: 3, pro: 25, enterprise: Infinity };
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -36,6 +38,29 @@ exports.handler = async (event) => {
 
     if (!name) {
       return { statusCode: 400, body: JSON.stringify({ error: "name is required" }) };
+    }
+
+    const { data: sub } = await supabase
+      .from("user_subscriptions")
+      .select("tier, status")
+      .eq("user_id", user.id)
+      .single();
+    const tier = sub?.status === "active" ? (sub?.tier || "starter") : "starter";
+
+    const { count } = await supabase
+      .from("suppliers")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (count >= TIER_LIMITS[tier]) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({
+          error: "supplier_limit_reached",
+          tier,
+          limit: TIER_LIMITS[tier],
+        }),
+      };
     }
 
     const { data, error } = await supabase

@@ -21,11 +21,12 @@
 
 const { runAgentLoop } = require("./lib/agent/loop");
 const { verifyUser }   = require("./lib/auth");
+const { HEADERS, preflight } = require("./lib/cors");
 
 function json(statusCode, body) {
   return {
     statusCode,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...HEADERS, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   };
 }
@@ -42,8 +43,11 @@ function isScheduledCall(event) {
 }
 
 exports.handler = async (event) => {
+  const pre = preflight(event);
+  if (pre) return pre;
+
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { statusCode: 405, headers: HEADERS, body: "Method Not Allowed" };
   }
 
   // ── Auth ──────────────────────────────────────────────────────────────────
