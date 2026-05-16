@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { Toaster } from "sonner";
+import ThemeProvider from "@/components/layout/ThemeProvider";
+import { THEME_COOKIE_NAME } from "@/lib/theme";
 import "./globals.css";
-
-const themeInitScript = `(function(){try{var t=localStorage.getItem('sp-theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,25 +22,23 @@ export const metadata: Metadata = {
     "Monitor your supplier watchlist with AI. Get a dynamic 0–100 health score, risk trajectory, and action plan in under 60 seconds.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const isDark = themeCookie === "dark";
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased${isDark ? " dark" : ""}`}
       suppressHydrationWarning
     >
-      {/*
-       * Blocking inline script (root layout only). Runs before paint so the
-       * `dark` class is on <html>` before CSS — avoids FOUC. A native <script>
-       * here is supported in App Router; next/script beforeInteractive triggers
-       * React 19 warnings when rendered on the client.
-       */}
       <body className="flex h-full min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeProvider />
         {children}
         <Toaster
           position="bottom-right"
