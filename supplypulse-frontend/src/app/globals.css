@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode so the toggle works independently of OS preference */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;     /* slate-900 */
+  --muted: #f8fafc;          /* slate-50 */
+  --card: #ffffff;
+  --border: #e2e8f0;         /* slate-200 */
+  --text-muted: #64748b;     /* slate-500 */
+}
+
+.dark {
+  --background: #020617;     /* slate-950 */
+  --foreground: #f1f5f9;     /* slate-100 */
+  --muted: #0f172a;          /* slate-900 */
+  --card: #1e293b;           /* slate-800 */
+  --border: #334155;         /* slate-700 */
+  --text-muted: #94a3b8;     /* slate-400 */
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+}
+
+/* Smooth color transitions on theme switch */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: ease;
+  transition-duration: 150ms;
+}
+
+/* But NOT on transforms/opacity — would break animations */
+[data-motion],
+.animate-spin,
+.animate-pulse,
+[class*="translate"],
+[class*="scale"],
+[class*="rotate"] {
+  transition-property: none;
+}
