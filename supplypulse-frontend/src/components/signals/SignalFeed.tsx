@@ -13,6 +13,7 @@ import {
 import { getSeverityColor, getSignalTypeLabel, formatDate } from "@/lib/utils";
 import type { Signal } from "@/lib/types/types";
 import EmptyState from "@/components/common/EmptyState";
+import SignalBadge from "@/components/signals/SignalBadge";
 
 // ─── Signal type metadata ─────────────────────────────────────────────────────
 
@@ -113,14 +114,7 @@ function SignalCard({ signal }: { signal: Signal }) {
 
           {/* Type label + severity badge */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${type.badgeCls}`}>
-              {getSignalTypeLabel(signal.type)}
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${sev.badge}`}
-            >
-              {signal.severity}
-            </span>
+            <SignalBadge type={signal.type} severity={signal.severity} />
           </div>
         </div>
 

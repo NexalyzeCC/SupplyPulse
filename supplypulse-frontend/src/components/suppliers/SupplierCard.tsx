@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Zap } from "lucide-react";
+import { Clock } from "lucide-react";
+import ScanButton from "@/components/suppliers/ScanButton";
 import {
   getScoreColor,
   getScoreTier,
@@ -202,16 +203,9 @@ export default function SupplierCard({ supplier }: Props) {
           </span>
 
           <div className="relative z-10 flex items-center gap-2">
-            {/* Scan button — stubbed, wired to agent API in Phase 5 */}
-            <button
-              disabled
-              onClick={(e) => e.stopPropagation()}
-              title="Scan Now (coming soon)"
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
-            >
-              <Zap className="h-3 w-3" aria-hidden />
-              Scan
-            </button>
+            <span onClick={(e) => e.stopPropagation()}>
+              <ScanButton supplierId={supplier.id} size="sm" />
+            </span>
 
             {/* View details — visible CTA above the card-link overlay */}
             <Link
