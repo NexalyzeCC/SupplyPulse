@@ -1,49 +1,83 @@
-const { createClient } = require("@supabase/supabase-js");
+/**
+ * GET /.netlify/functions/score-history?supplierId={id}
+ *
+ * Returns the score trajectory for a single supplier (newest 30 rows,
+ * ordered ascending so charts render left-to-right).
+ *
+ * Auth: Bearer token required.
+ * Ownership: confirms the supplier belongs to the authenticated user before
+ * returning any data.
+ *
+ * Response: Array<{ id, score, direction, summary, created_at }>
+ */
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { createClient } = require("@supabase/supabase-js");
+const { verifyUser }   = require("./lib/auth");
+
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  try {
-    const supplierId = event.queryStringParameters?.supplierId;
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  const { user, error: authError } = await verifyUser(event);
+  if (!user) {
+    return json(401, { error: authError ?? "Unauthorized" });
+  }
 
-    if (!supplierId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "supplierId is required" }),
-      };
+  // ── Input ──────────────────────────────────────────────────────────────────
+  const supplierId = event.queryStringParameters?.supplierId;
+  if (!supplierId) {
+    return json(400, { error: "supplierId query param is required" });
+  }
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } },
+  );
+
+  try {
+    // ── Ownership check ───────────────────────────────────────────────────────
+    const { data: supplier, error: supplierErr } = await supabase
+      .from("suppliers")
+      .select("id")
+      .eq("id", supplierId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (supplierErr) {
+      return json(500, { error: supplierErr.message });
     }
 
+    if (!supplier) {
+      return json(404, { error: "Supplier not found" });
+    }
+
+    // ── Fetch score history ───────────────────────────────────────────────────
     const { data, error } = await supabase
-      .from("scores")
-      .select("score, risk, summary, alerts, news_signal, financial_signal, legal_signal, scored_at")
+      .from("supplier_scores")
+      .select("id, score, direction, summary, created_at")
       .eq("supplier_id", supplierId)
-      .order("scored_at", { ascending: true })
+      .order("created_at", { ascending: true }) // ascending for chart x-axis
       .limit(30);
 
     if (error) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: error.message }),
-      };
+      console.error("[score-history] Query error:", error.message);
+      return json(500, { error: error.message });
     }
 
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    };
+    return json(200, data ?? []);
   } catch (err) {
-    console.error("score-history error:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
+    console.error("[score-history] Unhandled error:", err);
+    return json(500, { error: err.message });
   }
 };

@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Netlify functions are CommonJS Node.js — allow require() there.
+  {
+    files: ["netlify/**/*.js", "**/netlify/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-var-requires": "off",
+      "import/no-commonjs": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

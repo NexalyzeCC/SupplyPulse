@@ -25,12 +25,15 @@ const handler = async () => {
       batch.map((s) =>
         fetch(`${process.env.URL}/.netlify/functions/score-supplier`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type":       "application/json",
+            "X-Scheduled-Secret": process.env.SCHEDULED_SECRET ?? "",
+          },
           body: JSON.stringify({
-            supplierId: s.id,
+            supplierId:   s.id,
             supplierName: s.name,
-            country: s.country,
-            category: s.category,
+            country:      s.country,
+            category:     s.category,
           }),
         })
       )

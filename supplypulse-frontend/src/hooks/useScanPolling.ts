@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ async function runPollLoop(
   abort:      AbortController,
   pollCount:  number,
   supplierId: string,
+  getToken:   () => Promise<string | null>,
   setState:   React.Dispatch<React.SetStateAction<ScanState>>,
   onComplete: () => void,
 ): Promise<void> {
@@ -72,9 +74,14 @@ async function runPollLoop(
   if (abort.signal.aborted) return;
 
   try {
+    const token = await getToken();
+    const headers: HeadersInit = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
+
     const res = await fetch(
       `/.netlify/functions/score-status?id=${encodeURIComponent(supplierId)}`,
-      { signal: abort.signal },
+      { headers, signal: abort.signal },
     );
 
     if (!res.ok) {
@@ -115,7 +122,7 @@ async function runPollLoop(
             ? { ...prev, polls: pollCount + 1 }
             : prev,
         );
-        await runPollLoop(abort, pollCount + 1, supplierId, setState, onComplete);
+        await runPollLoop(abort, pollCount + 1, supplierId, getToken, setState, onComplete);
     }
   } catch (err) {
     if (!abort.signal.aborted) {
@@ -131,6 +138,16 @@ async function runPollLoop(
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
+
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function useScanPolling(supplierId: string): UseScanPollingReturn {
   const router   = useRouter();
@@ -212,7 +229,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
       startRef.current = Date.now();
       setState({ kind: "scanning", polls: 0, elapsedMs: 0 });
 
-      await runPollLoop(abort, 0, supplierId, setState, () => router.refresh());
+      await runPollLoop(abort, 0, supplierId, getAccessToken, setState, () => router.refresh());
     } catch (err) {
       if (!abort.signal.aborted) {
         setState({

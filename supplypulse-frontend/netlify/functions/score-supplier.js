@@ -1,14 +1,44 @@
-const OpenAI = require("openai");
-const { createClient } = require("@supabase/supabase-js");
+/**
+ * POST /.netlify/functions/score-supplier
+ *
+ * Body: { supplierId: string, supplierName?: string, country?: string, category?: string }
+ *
+ * Auth:
+ *   • Normal callers  — Bearer token verified via verifyUser()
+ *   • Scheduled scans — X-Scheduled-Secret header matching SCHEDULED_SECRET env var
+ *     (scheduled-scan.js cannot carry a user JWT, so it uses a shared secret instead)
+ *
+ * Delegates to runAgentLoop() which runs the full multi-step AI pipeline:
+ *   1. Idempotency check (skip if already scored today)
+ *   2. Parallel web searches (Tavily primary, Serper fallback)
+ *   3. Signal extraction  (GPT-4o-mini)
+ *   4. Score synthesis    (GPT-4o)
+ *   5. Persist            (supplier_scores + supplier_signals)
+ *   6. Alert              (email via Resend + Slack webhook if triggered)
+ *
+ * Returns: { ok: true, status, scoreId, score, direction }
+ */
 
-const openai = new OpenAI.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const { runAgentLoop } = require("./lib/agent/loop");
+const { verifyUser }   = require("./lib/auth");
 
-function sanitizeSupplierName(name) {
-  return String(name).trim().slice(0, 100).replace(/[^\w\s\-.,&()]/g, "");
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+
+/** Returns true when the request comes from the trusted scheduler. */
+function isScheduledCall(event) {
+  const secret = process.env.SCHEDULED_SECRET;
+  if (!secret) return false; // secret not configured — never trust
+  const header =
+    event.headers?.["x-scheduled-secret"] ??
+    event.headers?.["X-Scheduled-Secret"] ??
+    "";
+  return header === secret;
 }
 
 exports.handler = async (event) => {
@@ -16,74 +46,39 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  try {
-    const { supplierId, supplierName, country, category } = JSON.parse(event.body);
-
-    // Step 1: Web search via Tavily
-    const safeName = sanitizeSupplierName(supplierName);
-    const searchRes = await fetch("https://api.tavily.com/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: process.env.TAVILY_API_KEY,
-        query: `${safeName} ${country} financial risk news legal 2024`,
-        search_depth: "advanced",
-        max_results: 8,
-      }),
-    });
-    const searchData = await searchRes.json();
-    const context = searchData.results.map((r) => r.content).join("\n\n");
-
-    // Step 2: GPT-4o scores it
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: `You are a supply chain risk analyst. Given news and signals about a supplier, 
-          return a JSON object with: 
-          { "score": 0-100 (100=healthy), "risk": "low|medium|high|critical", 
-            "news_signal": 0-100, "financial_signal": 0-100, "legal_signal": 0-100,
-            "alerts": ["string"], "summary": "2 sentence explanation" }`,
-        },
-        {
-          role: "user",
-          content: `Supplier: ${supplierName} (${category}, ${country})\n\nRecent signals:\n${context}`,
-        },
-      ],
-    });
-
-    const result = JSON.parse(completion.choices[0].message.content);
-
-    // Step 3: Persist to Supabase (only if supplierId was provided)
-    if (supplierId) {
-      const { error } = await supabase.from("scores").insert({
-        supplier_id: supplierId,
-        score: result.score,
-        risk: result.risk,
-        news_signal: result.news_signal,
-        financial_signal: result.financial_signal,
-        legal_signal: result.legal_signal,
-        alerts: result.alerts,
-        summary: result.summary,
-      });
-
-      if (error) {
-        console.error("Supabase insert error:", error.message);
-      }
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  if (!isScheduledCall(event)) {
+    const { user, error: authError } = await verifyUser(event);
+    if (!user) {
+      return json(401, { error: authError ?? "Unauthorized" });
     }
+  }
 
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(result),
-    };
+  // ── Body parsing ──────────────────────────────────────────────────────────
+  let body;
+  try {
+    body = JSON.parse(event.body || "{}");
+  } catch {
+    return json(400, { error: "Invalid JSON body" });
+  }
+
+  const { supplierId, supplierName, country, category } = body;
+
+  if (!supplierId || typeof supplierId !== "string") {
+    return json(400, { error: "supplierId (string) is required" });
+  }
+
+  // ── Run agent ─────────────────────────────────────────────────────────────
+  try {
+    const result = await runAgentLoop(supplierId, {
+      supplierName: supplierName ?? undefined,
+      country:      country      ?? undefined,
+      category:     category     ?? undefined,
+    });
+
+    return json(200, { ok: true, ...result });
   } catch (err) {
-    console.error("Function error:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
+    console.error("[score-supplier] Unhandled error:", err);
+    return json(500, { error: err.message ?? "Internal server error" });
   }
 };
