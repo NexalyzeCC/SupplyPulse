@@ -11,7 +11,7 @@ import {
   ReferenceLine,
   ReferenceArea,
   ResponsiveContainer,
-  type TooltipProps,
+  type TooltipContentProps,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
 import type { SupplierScore } from "@/lib/types/types";
@@ -58,7 +58,10 @@ function zoneStyle(score: number) {
 
 // ─── Custom tooltip ───────────────────────────────────────────────────────────
 
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+function CustomTooltip({
+  active,
+  payload,
+}: Partial<TooltipContentProps<number, string>>) {
   if (!active || !payload?.length) return null;
   const pt = payload[0].payload as ChartPoint;
   const colors = getScoreColor(pt.score);

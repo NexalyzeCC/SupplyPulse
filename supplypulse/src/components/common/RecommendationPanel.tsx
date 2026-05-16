@@ -202,7 +202,11 @@ export default function RecommendationPanel({
   function toggleDone(priority: number) {
     setDone((prev) => {
       const next = new Set(prev);
-      next.has(priority) ? next.delete(priority) : next.add(priority);
+      if (next.has(priority)) {
+        next.delete(priority);
+      } else {
+        next.add(priority);
+      }
       return next;
     });
   }
