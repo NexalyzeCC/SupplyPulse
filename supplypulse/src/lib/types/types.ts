@@ -40,6 +40,11 @@ export interface Recommendation {
   rationale: string;
 }
 
+/** Supplier row joined with its single most-recent score (null if never scanned). */
+export type SupplierWithScore = Supplier & {
+  latestScore: SupplierScore | null;
+};
+
 export interface AlertLogEntry {
   id: string;
   supplier_id: string;
