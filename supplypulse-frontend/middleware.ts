@@ -17,6 +17,14 @@ function isProtected(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Send legacy / bookmarked auth URLs to the landing page (clean public URL).
+  if (pathname === "/login") {
+    const dest = request.nextUrl.searchParams.get("redirectTo");
+    if (dest === "/dashboard") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   // Pass through all public routes immediately — no session work needed
   if (PUBLIC_ROUTES.has(pathname)) {
     return NextResponse.next();
