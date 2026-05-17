@@ -30,6 +30,12 @@ interface Props {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+/** Stripe / portal return absolute HTTPS URLs; module-level avoids render-phase purity lint false-positives. */
+function redirectToExternalUrl(url: string) {
+  if (typeof window === "undefined") return;
+  window.location.assign(url);
+}
+
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   try {
@@ -135,7 +141,7 @@ export default function PlanSection({
         return;
       }
 
-      window.location.href = data.url;
+      redirectToExternalUrl(data.url);
     } catch (err) {
       toast.error("Upgrade unavailable", {
         description:
@@ -179,7 +185,7 @@ export default function PlanSection({
         return;
       }
 
-      window.location.href = data.url;
+      redirectToExternalUrl(data.url);
     } catch (err) {
       toast.error("Billing portal unavailable", {
         description:

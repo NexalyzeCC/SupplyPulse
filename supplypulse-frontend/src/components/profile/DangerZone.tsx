@@ -127,9 +127,9 @@ export default function DangerZone() {
                     Delete your account?
                   </h2>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    This permanently removes your account and every supplier,
-                    score, signal, and alert you've ever created. This action
-                    cannot be undone.
+                    This permanently removes your account and every supplier, score,
+                    signal, and alert you&apos;ve ever created. This action cannot be
+                    undone.
                   </p>
                 </div>
               </div>

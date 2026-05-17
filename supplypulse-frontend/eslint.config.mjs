@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".netlify/**", // CLI dev artefacts (telemetry bundles) — not source.
     "out/**",
     "build/**",
     "next-env.d.ts",
@@ -20,6 +21,14 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-var-requires": "off",
       "import/no-commonjs": "off",
+    },
+  },
+  // Local Node tooling scripts — CommonJS require().
+  {
+    files: ["scripts/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-var-requires": "off",
     },
   },
 ]);
