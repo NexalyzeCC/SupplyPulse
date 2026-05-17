@@ -211,9 +211,6 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
     abortRef.current = abort;
 
     try {
-<<<<<<< Updated upstream
-      const res = await fetch(apiUrl("score-supplier"), {
-=======
       const token = await getAccessToken();
       if (!token) {
         setState({
@@ -223,8 +220,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/.netlify/functions/score-supplier`, {
->>>>>>> Stashed changes
+      const res = await fetch(apiUrl("score-supplier"), {
         method:  "POST",
         headers: {
           "Content-Type": "application/json",

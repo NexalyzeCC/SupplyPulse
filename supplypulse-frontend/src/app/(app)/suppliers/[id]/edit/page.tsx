@@ -1,14 +1,9 @@
 import { notFound } from "next/navigation";
-<<<<<<< Updated upstream
-import SupplierForm from "@/components/suppliers/SupplierForm";
-import { createClient } from "@/lib/supabase/server";
-=======
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SupplierForm from "@/components/suppliers/SupplierForm";
 import DeleteSupplierButton from "@/components/suppliers/DeleteSupplierButton";
->>>>>>> Stashed changes
 import type { Supplier } from "@/lib/types/types";
 
 async function getSupplier(id: string): Promise<Supplier | null> {
@@ -33,12 +28,6 @@ export default async function EditSupplierPage({
   if (!supplier) notFound();
 
   return (
-<<<<<<< Updated upstream
-    <SupplierForm
-      supplier={supplier}
-      cancelHref={`/suppliers/${supplier.id}`}
-    />
-=======
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
       {/* Back link */}
       <Link
@@ -99,6 +88,5 @@ export default async function EditSupplierPage({
         </div>
       </section>
     </div>
->>>>>>> Stashed changes
   );
 }
