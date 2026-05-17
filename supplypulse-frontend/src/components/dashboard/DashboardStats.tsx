@@ -20,9 +20,10 @@ export default function DashboardStats({ suppliers }: Props) {
       label: "Total suppliers",
       value: suppliers.length,
       icon: Activity,
-      iconClass: "text-blue-600",
-      bgClass: "bg-blue-50",
-      valueClass: "text-slate-900",
+      iconClass: "text-blue-600 dark:text-blue-400",
+      bgClass: "bg-blue-50 dark:bg-blue-950/35",
+      valueClass:
+        "text-slate-900 dark:text-blue-300",
     },
     {
       label: "Healthy",
@@ -63,7 +64,7 @@ export default function DashboardStats({ suppliers }: Props) {
             <Icon className={`h-5 w-5 ${iconClass}`} />
           </div>
           <div className="min-w-0">
-            <dt className="truncate text-xs font-medium text-slate-500">
+            <dt className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
               {label}
             </dt>
             <dd className={`mt-0.5 text-2xl font-bold tabular-nums ${valueClass}`}>

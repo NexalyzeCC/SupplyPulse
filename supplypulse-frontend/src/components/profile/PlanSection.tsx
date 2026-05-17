@@ -260,9 +260,9 @@ export default function PlanSection({
 
           {/* Usage meter */}
           <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-            <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-200">
               <span>Suppliers in use</span>
-              <span className="tabular-nums">
+              <span className="tabular-nums font-semibold text-blue-700 dark:text-blue-300">
                 {supplierCount} / {formatLimit(current.supplierLimit)}
               </span>
             </div>
