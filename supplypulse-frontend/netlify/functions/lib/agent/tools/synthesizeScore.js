@@ -13,8 +13,23 @@ const { SYSTEM_PROMPT, SYNTHESIS_PROMPT } = require("../prompts");
 const { validateScoreOutput } = require("../../validation");
 const { logLLM } = require("../../logger");
 
-const openai = new OpenAI.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = "gpt-4o";
+
+// Lazy singleton. See extractSignals.js for the rationale — the OpenAI
+// constructor throws synchronously when OPENAI_API_KEY is missing, so
+// instantiating at module load would crash before the handler runs.
+let _client = null;
+function getClient() {
+  if (_client) return _client;
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is not configured. Set it in your environment (Netlify → Site settings → Environment variables for production).",
+    );
+  }
+  _client = new OpenAI.OpenAI({ apiKey });
+  return _client;
+}
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 
@@ -30,7 +45,7 @@ async function synthesizeScore(signals, supplier, ctx = {}) {
 
   const t0 = Date.now();
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getClient().chat.completions.create({
       model:           MODEL,
       response_format: { type: "json_object" },
       temperature:     0.3,
