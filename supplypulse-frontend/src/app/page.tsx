@@ -27,22 +27,22 @@ const FEATURES = [
     icon: Zap,
     title: "Score in under 60 seconds",
     body: "The AI agent searches news, legal filings, and financial signals, then synthesises a 0–100 health score the moment you add a supplier.",
-    iconCls: "text-blue-600",
-    bgCls: "bg-blue-50",
+    iconCls: "text-blue-600 dark:text-blue-400",
+    bgCls: "bg-blue-50 dark:bg-blue-950/40",
   },
   {
     icon: BarChart3,
     title: "30/60/90-day trajectory",
     body: "Daily scans build a score history. Spot a deteriorating trend days before it becomes a supply disruption — not after.",
-    iconCls: "text-indigo-600",
-    bgCls: "bg-indigo-50",
+    iconCls: "text-indigo-600 dark:text-indigo-400",
+    bgCls: "bg-indigo-50 dark:bg-indigo-950/40",
   },
   {
     icon: Bell,
     title: "Threshold alerts",
     body: "Set a score threshold per supplier. Email and Slack notifications fire automatically when the score drops and falls more than 10 points.",
-    iconCls: "text-violet-600",
-    bgCls: "bg-violet-50",
+    iconCls: "text-violet-600 dark:text-violet-400",
+    bgCls: "bg-violet-50 dark:bg-violet-950/40",
   },
 ] as const;
 
@@ -55,21 +55,23 @@ export default async function LandingPage() {
   if (user) redirect("/dashboard");
 
   return (
-    <div className="w-full flex flex-col min-h-screen overflow-x-hidden bg-white">
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-white dark:bg-slate-950">
 
       {/* ── Nav ── */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
               <ShieldCheck className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900">SupplyPulse</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              SupplyPulse
+            </span>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
             >
               Sign in
             </Link>
@@ -140,13 +142,13 @@ export default async function LandingPage() {
       </section>
 
       {/* ── Feature highlights ── */}
-      <section className="bg-white px-6 py-20">
+      <section className="bg-white px-6 py-20 dark:bg-slate-900">
         <div className="mx-auto max-w-5xl">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
               Everything you need to stay ahead of supply risk
             </h2>
-            <p className="mt-3 text-slate-500">
+            <p className="mt-3 text-slate-500 dark:text-slate-400">
               Built on a transparent AI agent loop — no black boxes.
             </p>
           </div>
@@ -155,17 +157,19 @@ export default async function LandingPage() {
             {FEATURES.map(({ icon: Icon, title, body, iconCls, bgCls }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-slate-100 bg-slate-50 p-6"
+                className="rounded-2xl border border-slate-100 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80"
               >
                 <div
                   className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${bgCls}`}
                 >
                   <Icon className={`h-5 w-5 ${iconCls}`} />
                 </div>
-                <h3 className="mb-2 text-base font-semibold text-slate-900">
+                <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">
                   {title}
                 </h3>
-                <p className="text-sm leading-7 text-slate-500">{body}</p>
+                <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+                  {body}
+                </p>
               </div>
             ))}
           </div>

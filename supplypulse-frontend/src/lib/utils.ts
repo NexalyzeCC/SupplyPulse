@@ -10,31 +10,33 @@ import type { Signal, SupplierScore } from "@/lib/types/types";
 export function getScoreColor(score: number) {
   if (score >= 70) {
     return {
-      text: "text-emerald-600",
-      bg: "bg-emerald-50",
-      border: "border-emerald-200",
-      badge: "bg-emerald-100 text-emerald-700",
+      text: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-950/40",
+      border: "border-emerald-200 dark:border-emerald-800/60",
+      badge:
+        "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
       dot: "bg-emerald-500",
-      ring: "ring-emerald-200",
+      ring: "ring-emerald-200 dark:ring-emerald-900/70",
     } as const;
   }
   if (score >= 40) {
     return {
-      text: "text-amber-600",
-      bg: "bg-amber-50",
-      border: "border-amber-200",
-      badge: "bg-amber-100 text-amber-700",
+      text: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-950/35",
+      border: "border-amber-200 dark:border-amber-800/55",
+      badge:
+        "bg-amber-100 text-amber-800 dark:bg-amber-950/45 dark:text-amber-300",
       dot: "bg-amber-500",
-      ring: "ring-amber-200",
+      ring: "ring-amber-200 dark:ring-amber-900/60",
     } as const;
   }
   return {
-    text: "text-red-600",
-    bg: "bg-red-50",
-    border: "border-red-200",
-    badge: "bg-red-100 text-red-700",
+    text: "text-red-600 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/35",
+    border: "border-red-200 dark:border-red-900/55",
+    badge: "bg-red-100 text-red-700 dark:bg-red-950/45 dark:text-red-300",
     dot: "bg-red-500",
-    ring: "ring-red-200",
+    ring: "ring-red-200 dark:ring-red-950/70",
   } as const;
 }
 
@@ -62,20 +64,20 @@ export function getDirectionMeta(
       return {
         icon: TrendingUp,
         label: "Improving",
-        className: "text-emerald-500",
+        className: "text-emerald-500 dark:text-emerald-400",
       };
     case "deteriorating":
       return {
         icon: TrendingDown,
         label: "Deteriorating",
-        className: "text-red-500",
+        className: "text-red-500 dark:text-red-400",
       };
     case "stable":
     default:
       return {
         icon: Minus,
         label: "Stable",
-        className: "text-slate-400",
+        className: "text-slate-400 dark:text-slate-500",
       };
   }
 }
@@ -123,28 +125,32 @@ export function getSeverityColor(severity: Signal["severity"]) {
   switch (severity) {
     case "critical":
       return {
-        badge: "bg-red-100 text-red-700 ring-1 ring-red-200",
+        badge:
+          "bg-red-100 text-red-700 ring-1 ring-red-200 dark:bg-red-950/45 dark:text-red-300 dark:ring-red-900/55",
         dot: "bg-red-500",
-        text: "text-red-600",
+        text: "text-red-600 dark:text-red-400",
       } as const;
     case "high":
       return {
-        badge: "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+        badge:
+          "bg-orange-100 text-orange-800 ring-1 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-900/55",
         dot: "bg-orange-500",
-        text: "text-orange-600",
+        text: "text-orange-600 dark:text-orange-400",
       } as const;
     case "medium":
       return {
-        badge: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
+        badge:
+          "bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/35 dark:text-amber-300 dark:ring-amber-900/50",
         dot: "bg-amber-500",
-        text: "text-amber-600",
+        text: "text-amber-600 dark:text-amber-400",
       } as const;
     case "low":
     default:
       return {
-        badge: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+        badge:
+          "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600",
         dot: "bg-slate-400",
-        text: "text-slate-500",
+        text: "text-slate-500 dark:text-slate-400",
       } as const;
   }
 }
@@ -169,14 +175,14 @@ export function getCriticalityColor(
 ) {
   switch (criticality) {
     case "critical":
-      return "bg-red-100 text-red-700 ring-1 ring-red-200";
+      return "bg-red-100 text-red-700 ring-1 ring-red-200 dark:bg-red-950/45 dark:text-red-300 dark:ring-red-900/55";
     case "high":
-      return "bg-orange-100 text-orange-700 ring-1 ring-orange-200";
+      return "bg-orange-100 text-orange-800 ring-1 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-900/55";
     case "medium":
-      return "bg-amber-100 text-amber-700 ring-1 ring-amber-200";
+      return "bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/35 dark:text-amber-300 dark:ring-amber-900/50";
     case "low":
     default:
-      return "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+      return "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600";
   }
 }
 

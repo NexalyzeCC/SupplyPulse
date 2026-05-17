@@ -37,8 +37,8 @@ export default function EmptyState({
   description,
   action,
   size = "md",
-  iconColor = "text-slate-400",
-  iconBg = "bg-slate-50 ring-1 ring-slate-200",
+  iconColor = "text-slate-400 dark:text-slate-500",
+  iconBg = "bg-slate-50 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700",
   className = "",
 }: EmptyStateProps) {
   const isCompact = size === "sm";

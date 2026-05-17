@@ -136,20 +136,20 @@ function StatsBar({ alerts }: { alerts: AlertEntry[] }) {
   return (
     <dl className="grid grid-cols-3 gap-4">
       {[
-        { label: "Total alerts", value: alerts.length, icon: Bell,         iconCls: "text-blue-600",   bgCls: "bg-blue-50"   },
-        { label: "Email",        value: emailCount,     icon: Mail,         iconCls: "text-slate-600",  bgCls: "bg-slate-100" },
-        { label: "Slack",        value: slackCount,     icon: MessageSquare,iconCls: "text-purple-600", bgCls: "bg-purple-50" },
+        { label: "Total alerts", value: alerts.length, icon: Bell,         iconCls: "text-blue-600 dark:text-blue-400",   bgCls: "bg-blue-50 dark:bg-blue-950/40"   },
+        { label: "Email",        value: emailCount,     icon: Mail,         iconCls: "text-slate-600 dark:text-slate-400",  bgCls: "bg-slate-100 dark:bg-slate-800" },
+        { label: "Slack",        value: slackCount,     icon: MessageSquare,iconCls: "text-purple-600 dark:text-purple-400", bgCls: "bg-purple-50 dark:bg-purple-950/40" },
       ].map(({ label, value, icon: Icon, iconCls, bgCls }) => (
         <div
           key={label}
-          className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+          className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/50 dark:shadow-black/20"
         >
           <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${bgCls}`}>
             <Icon className={`h-4 w-4 ${iconCls}`} />
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-500">{label}</dt>
-            <dd className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900">
+            <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</dt>
+            <dd className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
               {value}
             </dd>
           </div>
@@ -170,8 +170,8 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
   return (
     <article className={`
       flex gap-4 rounded-xl border bg-white p-4 shadow-sm
-      transition-shadow hover:shadow-md
-      ${scoreColors ? scoreColors.border : "border-slate-200"}
+      transition-shadow hover:shadow-md dark:bg-slate-900/55 dark:shadow-black/20 dark:hover:shadow-black/35
+      ${scoreColors ? scoreColors.border : "border-slate-200 dark:border-slate-800"}
     `}>
       {/* Score circle */}
       <div className={`
@@ -179,7 +179,7 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
         rounded-full ring-4 font-bold tabular-nums
         ${scoreColors
           ? `${scoreColors.bg} ${scoreColors.text} ${scoreColors.ring}`
-          : "bg-slate-100 text-slate-400 ring-slate-200"
+          : "bg-slate-100 text-slate-400 ring-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700"
         }
       `}>
         {entry.score !== null ? (
@@ -201,7 +201,7 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
           <div className="min-w-0">
             <Link
               href={`/suppliers/${entry.supplierId}`}
-              className="truncate font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+              className="truncate font-semibold text-slate-900 transition-colors hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"
             >
               {entry.supplierName}
             </Link>
@@ -222,7 +222,7 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
             <ChannelBadge channel={entry.channel} />
             <time
               dateTime={entry.sentAt}
-              className="text-[11px] text-slate-400"
+              className="text-[11px] text-slate-400 dark:text-slate-500"
             >
               {formatDate(entry.sentAt)}
             </time>
@@ -230,9 +230,9 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
         </div>
 
         {/* Score context line */}
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Score{" "}
-          <strong className={scoreColors?.text ?? "text-slate-700"}>
+          <strong className={scoreColors?.text ?? "text-slate-700 dark:text-slate-200"}>
             {entry.score ?? "—"}
           </strong>
           {" "}dropped below threshold of{" "}
@@ -248,7 +248,7 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
         {/* CTA */}
         <Link
           href={`/suppliers/${entry.supplierId}`}
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
         >
           View supplier
           <ArrowRight className="h-3 w-3" />
@@ -263,14 +263,14 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
 function ChannelBadge({ channel }: { channel: "email" | "slack" }) {
   if (channel === "email") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200">
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
         <Mail className="h-3 w-3" />
         Email
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-100">
+    <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:ring-purple-900/55">
       <MessageSquare className="h-3 w-3" />
       Slack
     </span>
@@ -320,12 +320,12 @@ export default async function AlertsPage() {
             <div className="mb-3 flex items-center gap-3">
               <h2
                 id={`group-${label}`}
-                className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >
                 {label}
               </h2>
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs text-slate-400">
+              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 {groups.get(label)!.length} alert
                 {groups.get(label)!.length !== 1 ? "s" : ""}
               </span>
@@ -342,7 +342,7 @@ export default async function AlertsPage() {
       </div>
 
       {/* Footer note */}
-      <p className="text-center text-xs text-slate-400">
+      <p className="text-center text-xs text-slate-400 dark:text-slate-500">
         Showing the most recent 200 alerts · Older history available via API
       </p>
     </div>

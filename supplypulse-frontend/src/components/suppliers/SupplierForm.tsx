@@ -100,19 +100,25 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-slate-700">
+      <label
+        htmlFor={htmlFor}
+        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+      >
         {label}
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       {children}
       {hint && !error && (
-        <p className="flex items-center gap-1 text-xs text-slate-400">
+        <p className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
           <Info className="h-3 w-3 shrink-0" />
           {hint}
         </p>
       )}
       {error && (
-        <p className="flex items-center gap-1 text-xs text-red-600" role="alert">
+        <p
+          className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400"
+          role="alert"
+        >
           <AlertTriangle className="h-3 w-3 shrink-0" />
           {error}
         </p>
@@ -124,10 +130,11 @@ function Field({
 const inputCls = (hasError?: boolean) =>
   [
     "h-10 w-full rounded-lg border px-3 text-sm text-slate-900",
-    "placeholder:text-slate-400 focus:outline-none focus:ring-2",
-    "focus:ring-blue-500 transition-colors",
+    "placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500",
+    "focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors",
+    "dark:border-slate-600 dark:bg-slate-950 dark:hover:border-slate-500 dark:focus:ring-blue-400",
     hasError
-      ? "border-red-400 bg-red-50"
+      ? "border-red-400 bg-red-50 dark:border-red-500/70 dark:bg-red-950/30"
       : "border-slate-300 bg-white hover:border-slate-400",
   ].join(" ");
 
@@ -305,19 +312,19 @@ export default function SupplierForm({
       {/* Back link */}
       <Link
         href={cancelHref}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         {isEdit ? "Back to supplier" : "Back to dashboard"}
       </Link>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:shadow-black/25">
         {/* ── Card header ── */}
-        <div className="border-b border-slate-100 px-8 py-6">
-          <h1 className="text-xl font-bold text-slate-900">
+        <div className="border-b border-slate-100 px-8 py-6 dark:border-slate-800">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             {isEdit ? `Edit ${supplier.name}` : "Add a supplier"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isEdit
               ? "Update the supplier's profile. Any changes take effect on the next scan."
               : "Once saved, trigger a scan to generate an initial risk score in under 60 seconds."}
@@ -331,7 +338,7 @@ export default function SupplierForm({
             <section aria-labelledby="section-basic">
               <h2
                 id="section-basic"
-                className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400"
+                className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500"
               >
                 Basic information
               </h2>
@@ -390,11 +397,11 @@ export default function SupplierForm({
             <section aria-labelledby="section-criticality">
               <h2
                 id="section-criticality"
-                className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400"
+                className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500"
               >
                 Criticality
               </h2>
-              <p className="mb-4 text-xs text-slate-500">
+              <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
                 How severely would your operations be affected if this supplier
                 could not deliver?
               </p>
@@ -417,8 +424,8 @@ export default function SupplierForm({
                         "flex flex-col items-start gap-2 rounded-xl border p-3.5",
                         "text-left transition-all",
                         selected
-                          ? "border-blue-500 bg-blue-50 shadow-sm ring-2 ring-blue-200"
-                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                          ? "border-blue-500 bg-blue-50 shadow-sm ring-2 ring-blue-200 dark:border-blue-500 dark:bg-blue-950/35 dark:ring-blue-900/55"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950/60 dark:hover:border-slate-600 dark:hover:bg-slate-800/70",
                       ].join(" ")}
                     >
                       <div className="flex w-full items-center justify-between">
@@ -426,17 +433,19 @@ export default function SupplierForm({
                           className={`h-2.5 w-2.5 rounded-full ${meta.dotClass}`}
                         />
                         {selected && (
-                          <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                          <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         )}
                       </div>
                       <span
                         className={`text-sm font-semibold capitalize ${
-                          selected ? "text-blue-700" : "text-slate-700"
+                          selected
+                            ? "text-blue-700 dark:text-blue-300"
+                            : "text-slate-700 dark:text-slate-200"
                         }`}
                       >
                         {CRITICALITY_LABELS[level]}
                       </span>
-                      <span className="text-[11px] leading-4 text-slate-500">
+                      <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
                         {meta.description}
                       </span>
                     </button>
@@ -449,7 +458,7 @@ export default function SupplierForm({
             <section aria-labelledby="section-alerts">
               <h2
                 id="section-alerts"
-                className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400"
+                className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500"
               >
                 Alert settings
               </h2>
@@ -471,7 +480,7 @@ export default function SupplierForm({
                       onChange={(e) =>
                         set("alert_threshold", Number(e.target.value))
                       }
-                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 dark:bg-slate-700"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -486,9 +495,11 @@ export default function SupplierForm({
                               Math.max(0, Math.min(100, Number(e.target.value))),
                             )
                           }
-                          className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="h-8 w-16 rounded-lg border border-slate-300 bg-white px-2 text-center text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-400"
                         />
-                        <span className="text-sm text-slate-500">/ 100</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          / 100
+                        </span>
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${thresholdColors.badge}`}
@@ -521,19 +532,19 @@ export default function SupplierForm({
             {serverError && (
               <div
                 role="alert"
-                className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/45 dark:bg-red-950/30 dark:text-red-300"
               >
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500 dark:text-red-400" />
                 <span>{serverError}</span>
               </div>
             )}
           </div>
 
           {/* ── Footer ── */}
-          <div className="flex items-center justify-between border-t border-slate-100 px-8 py-5">
+          <div className="flex items-center justify-between border-t border-slate-100 px-8 py-5 dark:border-slate-800">
             <Link
               href={cancelHref}
-              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
             >
               Cancel
             </Link>

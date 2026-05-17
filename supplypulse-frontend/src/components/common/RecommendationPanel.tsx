@@ -13,18 +13,21 @@ const PRIORITY_META: Record<
 > = {
   1: {
     label: "Immediate",
-    badgeCls: "bg-red-100 text-red-700 ring-1 ring-red-200",
-    bubbleCls: "bg-red-600 text-white",
+    badgeCls:
+      "bg-red-100 text-red-700 ring-1 ring-red-200 dark:bg-red-950/45 dark:text-red-300 dark:ring-red-900/55",
+    bubbleCls: "bg-red-600 text-white dark:bg-red-600",
   },
   2: {
     label: "Short-term",
-    badgeCls: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
-    bubbleCls: "bg-amber-500 text-white",
+    badgeCls:
+      "bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/35 dark:text-amber-300 dark:ring-amber-900/50",
+    bubbleCls: "bg-amber-500 text-white dark:bg-amber-500",
   },
   3: {
     label: "Medium-term",
-    badgeCls: "bg-blue-100 text-blue-700 ring-1 ring-blue-200",
-    bubbleCls: "bg-blue-600 text-white",
+    badgeCls:
+      "bg-blue-100 text-blue-800 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900/50",
+    bubbleCls: "bg-blue-600 text-white dark:bg-blue-500",
   },
 };
 
@@ -32,8 +35,10 @@ function priorityMeta(priority: number) {
   return (
     PRIORITY_META[priority] ?? {
       label: `Priority ${priority}`,
-      badgeCls: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
-      bubbleCls: "bg-slate-700 text-white",
+      badgeCls:
+        "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600",
+      bubbleCls:
+        "bg-slate-700 text-white dark:bg-slate-600 dark:text-white",
     }
   );
 }
@@ -57,8 +62,8 @@ function RecommendationItem({
       className={`
         rounded-xl border p-4 transition-colors
         ${done
-          ? "border-slate-100 bg-slate-50"
-          : "border-slate-200 bg-white shadow-sm hover:shadow-md"
+          ? "border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50"
+          : "border-slate-200 bg-white shadow-sm hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:shadow-black/25"
         }
       `}
     >
@@ -68,7 +73,7 @@ function RecommendationItem({
           className={`
             flex h-6 w-6 shrink-0 items-center justify-center
             rounded-full text-[11px] font-bold
-            ${done ? "bg-slate-300 text-white" : meta.bubbleCls}
+            ${done ? "bg-slate-300 text-white dark:bg-slate-600" : meta.bubbleCls}
           `}
           aria-label={`Priority ${rec.priority}`}
         >
@@ -80,7 +85,7 @@ function RecommendationItem({
           <span
             className={`
               rounded-full px-2 py-0.5 text-[10px] font-semibold
-              ${done ? "bg-slate-100 text-slate-400" : meta.badgeCls}
+              ${done ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : meta.badgeCls}
             `}
           >
             {meta.label}
@@ -100,7 +105,7 @@ function RecommendationItem({
                 rounded border-2 transition-colors
                 ${done
                   ? "border-emerald-500 bg-emerald-500"
-                  : "border-slate-300 hover:border-blue-400"
+                  : "border-slate-300 hover:border-blue-400 dark:border-slate-600 dark:hover:border-blue-400"
                 }
               `}
             >
@@ -124,8 +129,8 @@ function RecommendationItem({
               className={`
                 text-sm font-medium leading-5 transition-colors
                 ${done
-                  ? "text-slate-400 line-through decoration-slate-300"
-                  : "text-slate-800"
+                  ? "text-slate-400 line-through decoration-slate-300 dark:text-slate-500 dark:decoration-slate-600"
+                  : "text-slate-800 dark:text-slate-100"
                 }
               `}
             >
@@ -139,7 +144,7 @@ function RecommendationItem({
               <button
                 type="button"
                 onClick={() => setRationaleOpen((o) => !o)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 aria-expanded={rationaleOpen}
               >
                 {rationaleOpen ? (
@@ -151,7 +156,7 @@ function RecommendationItem({
               </button>
 
               {rationaleOpen && (
-                <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
                   {rec.rationale}
                 </p>
               )}
@@ -168,9 +173,11 @@ function RecommendationItem({
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-      <Lightbulb className="h-8 w-8 text-slate-300" />
-      <p className="text-sm font-medium text-slate-400">No action plan yet</p>
-      <p className="text-xs text-slate-400">
+      <Lightbulb className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+      <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+        No action plan yet
+      </p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">
         Scan this supplier to generate AI-powered recommendations.
       </p>
     </div>
@@ -223,15 +230,15 @@ export default function RecommendationPanel({
     showAlert && currentScore !== null ? getScoreColor(currentScore) : null;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:shadow-black/25">
       {/* ── Header ── */}
-      <div className="border-b border-slate-100 px-5 py-4">
+      <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               Action plan
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               {totalCount === 0
                 ? "AI-generated once a scan completes"
                 : `${completedCount} of ${totalCount} completed`}
@@ -244,8 +251,8 @@ export default function RecommendationPanel({
               className={`
                 rounded-full px-2.5 py-0.5 text-xs font-semibold
                 ${allDone
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 }
               `}
             >
@@ -256,7 +263,7 @@ export default function RecommendationPanel({
 
         {/* Progress bar */}
         {totalCount > 0 && (
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${(completedCount / totalCount) * 100}%` }}
@@ -299,7 +306,7 @@ export default function RecommendationPanel({
             </ol>
 
             {/* Disclaimer */}
-            <p className="border-t border-slate-100 pt-3 text-[10px] text-slate-400">
+            <p className="border-t border-slate-100 pt-3 text-[10px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
               AI-generated · Not financial or legal advice · Validate with your
               procurement team before acting.
             </p>

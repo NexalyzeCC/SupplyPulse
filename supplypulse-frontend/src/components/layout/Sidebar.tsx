@@ -56,8 +56,9 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
     <aside
       aria-label="Main navigation"
       className={[
-        // Base — full-height, fixed, dark panel
-        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-slate-900 border-r border-slate-800",
+        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r",
+        "bg-white border-slate-200 text-slate-900",
+        "dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100",
         // Slide-in/out on mobile; always visible on desktop
         "transform transition-transform duration-300 ease-in-out",
         "lg:translate-x-0",
@@ -65,12 +66,12 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
       ].join(" ")}
     >
       {/* ── Brand + mobile close button ── */}
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-lg shadow-blue-600/30">
             <ShieldCheck className="h-4 w-4 text-white" />
           </div>
-          <span className="text-base font-bold tracking-tight text-white">
+          <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             SupplyPulse
           </span>
         </div>
@@ -79,7 +80,7 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
         <button
           onClick={onClose}
           aria-label="Close navigation"
-          className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-white lg:hidden"
+          className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <X className="h-5 w-5" />
         </button>
@@ -102,7 +103,7 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
                 "text-sm font-medium transition-colors",
                 isActive
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
               ].join(" ")}
             >
               <span className="flex items-center gap-3">
@@ -110,7 +111,7 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
                   className={`h-4 w-4 shrink-0 ${
                     isActive
                       ? "text-white"
-                      : "text-slate-500 group-hover:text-slate-300"
+                      : "text-slate-400 group-hover:text-slate-700 dark:text-slate-500 dark:group-hover:text-slate-200"
                   }`}
                 />
                 {label}
@@ -124,25 +125,25 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
       </nav>
 
       {/* ── Divider ── */}
-      <div className="mx-4 border-t border-slate-800" />
+      <div className="mx-4 border-t border-slate-200 dark:border-slate-800" />
 
       {/* ── User + sign-out ── */}
       <div className="shrink-0 px-3 py-4">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-slate-800/60">
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60">
           {/* Avatar + email — entire block links to profile */}
           <Link
             href="/profile"
             aria-label="Open profile"
             className="flex min-w-0 flex-1 items-center gap-3"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-slate-200 ring-1 ring-slate-600">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-slate-300">
+              <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
                 {email ?? "Not signed in"}
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
                 {PLANS[tier].name} plan
               </p>
             </div>
@@ -152,7 +153,7 @@ export default function Sidebar({ email, tier, isOpen, onClose }: SidebarProps) 
           <button
             onClick={handleSignOut}
             title="Sign out"
-            className="ml-auto shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+            className="ml-auto shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             suppressHydrationWarning
           >
             <LogOut className="h-4 w-4" />

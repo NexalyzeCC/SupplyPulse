@@ -69,7 +69,7 @@ export default function ScanButton({
       <button
         onClick={trigger}
         disabled={isStarting}
-        className={`${base} border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60`}
+        className={`${base} border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400`}
       >
         {isStarting ? (
           <Loader2 className={`${sm ? "h-3 w-3" : "h-4 w-4"} animate-spin`} />
@@ -90,13 +90,13 @@ export default function ScanButton({
     return (
       <div className="flex flex-col items-end gap-1.5">
         <div
-          className={`${base} cursor-default border border-blue-200 bg-blue-50 text-blue-700`}
+          className={`${base} cursor-default border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/55 dark:bg-blue-950/40 dark:text-blue-300`}
         >
           <Loader2 className={`${sm ? "h-3 w-3" : "h-4 w-4"} animate-spin`} />
           {sm ? "Scanning…" : `Scanning… (${elapsedSec}s)`}
         </div>
         {!sm && (
-          <div className="h-1 w-full overflow-hidden rounded-full bg-blue-100">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-blue-100 dark:bg-blue-950/70">
             <div
               className="h-full rounded-full bg-blue-400 transition-all duration-500"
               style={{ width: `${progressPct}%` }}
@@ -112,7 +112,7 @@ export default function ScanButton({
   if (state.kind === "complete") {
     return (
       <div
-        className={`${base} cursor-default border border-emerald-200 bg-emerald-50 text-emerald-700`}
+        className={`${base} cursor-default border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/55 dark:bg-emerald-950/35 dark:text-emerald-300`}
       >
         <CheckCircle2 className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
         Done! Refreshing…
@@ -126,7 +126,7 @@ export default function ScanButton({
     return (
       <div className="flex items-center gap-2">
         <div
-          className={`${base} cursor-default border border-amber-200 bg-amber-50 text-amber-700`}
+          className={`${base} cursor-default border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/55 dark:bg-amber-950/35 dark:text-amber-300`}
         >
           <Clock className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
           Timed out
@@ -134,7 +134,7 @@ export default function ScanButton({
         <button
           onClick={reset}
           title="Retry scan"
-          className={`${base} border border-slate-200 bg-white text-slate-600 hover:bg-slate-50`}
+          className={`${base} border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
         >
           <RotateCcw className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
           {!sm && "Retry"}
@@ -149,7 +149,7 @@ export default function ScanButton({
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <div
-          className={`${base} cursor-default border border-red-200 bg-red-50 text-red-700`}
+          className={`${base} cursor-default border border-red-200 bg-red-50 text-red-700 dark:border-red-900/55 dark:bg-red-950/35 dark:text-red-300`}
         >
           <AlertTriangle className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
           {sm ? "Failed" : "Scan failed"}
@@ -157,14 +157,14 @@ export default function ScanButton({
         <button
           onClick={reset}
           title="Retry scan"
-          className={`${base} border border-slate-200 bg-white text-slate-600 hover:bg-slate-50`}
+          className={`${base} border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}
         >
           <RotateCcw className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
           {!sm && "Retry"}
         </button>
       </div>
       {!sm && (
-        <p className="max-w-[260px] text-right text-[10px] text-red-500">
+        <p className="max-w-[260px] text-right text-[10px] text-red-500 dark:text-red-400">
           {state.message}
         </p>
       )}

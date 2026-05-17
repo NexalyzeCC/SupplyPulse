@@ -14,6 +14,7 @@ import {
   type TooltipContentProps,
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import type { SupplierScore } from "@/lib/types/types";
 import { getScoreColor, getScoreTier } from "@/lib/utils";
 
@@ -76,10 +77,10 @@ function CustomTooltip({
 
   const dirClass =
     pt.direction === "improving"
-      ? "text-emerald-500"
+      ? "text-emerald-500 dark:text-emerald-400"
       : pt.direction === "deteriorating"
-        ? "text-red-500"
-        : "text-slate-400";
+        ? "text-red-500 dark:text-red-400"
+        : "text-slate-400 dark:text-slate-500";
 
   const dirLabel =
     pt.direction === "improving"
@@ -89,8 +90,10 @@ function CustomTooltip({
         : "Stable";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-xl">
-      <p className="mb-1.5 text-[11px] text-slate-400">{pt.fullDate}</p>
+    <div className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <p className="mb-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+        {pt.fullDate}
+      </p>
 
       {/* Score */}
       <p className={`text-2xl font-extrabold tabular-nums leading-none ${colors.text}`}>
@@ -134,11 +137,13 @@ function EmptyChart({ height }: { height: number }) {
   return (
     <div
       style={{ height }}
-      className="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 text-center"
+      className="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 text-center dark:bg-slate-900/60"
     >
-      <BarChart2 className="h-8 w-8 text-slate-300" />
-      <p className="text-sm font-medium text-slate-400">No scan history yet</p>
-      <p className="text-xs text-slate-400">
+      <BarChart2 className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+      <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+        No scan history yet
+      </p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">
         Trigger a scan to start building the trajectory.
       </p>
     </div>
@@ -166,7 +171,7 @@ function SinglePointState({
       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${colors.badge}`}>
         {tier}
       </span>
-      <p className="max-w-[220px] text-center text-xs text-slate-500">
+      <p className="max-w-[220px] text-center text-xs text-slate-500 dark:text-slate-400">
         First scan recorded on {point.fullDate}. More data points will appear
         after daily scans.
       </p>
@@ -190,6 +195,12 @@ export default function TrajectoryChart({
   height = 240,
 }: TrajectoryChartProps) {
   const [window, setWindow] = useState<Window>(90);
+  const { isDark } = useTheme();
+
+  const gridStroke = isDark ? "#334155" : "#e2e8f0";
+  const tickFill = isDark ? "#94a3b8" : "#64748b";
+  const tooltipCursorStroke = isDark ? "#475569" : "#cbd5e1";
+  const dotStrokeOuter = isDark ? "#f1f5f9" : "#ffffff";
 
   // All chart points (memo to avoid recomputing on window change)
   const allPoints = useMemo(() => toChartPoints(scores), [scores]);
@@ -225,10 +236,10 @@ export default function TrajectoryChart({
     <div>
       {/* Time window tabs */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-400 dark:text-slate-500">
           {data.length} scan{data.length !== 1 ? "s" : ""} in window
         </p>
-        <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+        <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/80">
           {WINDOWS.map((w) => (
             <button
               key={w}
@@ -236,8 +247,8 @@ export default function TrajectoryChart({
               className={[
                 "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
                 window === w
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100 dark:shadow-none"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200",
               ].join(" ")}
             >
               {w}d
@@ -267,26 +278,41 @@ export default function TrajectoryChart({
           </defs>
 
           {/* Zone bands */}
-          <ReferenceArea y1={70} y2={100} fill="#d1fae5" fillOpacity={0.4} />
-          <ReferenceArea y1={40} y2={70}  fill="#fef9c3" fillOpacity={0.4} />
-          <ReferenceArea y1={0}  y2={40}  fill="#fee2e2" fillOpacity={0.4} />
+          <ReferenceArea
+            y1={70}
+            y2={100}
+            fill={isDark ? "#065f46" : "#d1fae5"}
+            fillOpacity={isDark ? 0.35 : 0.4}
+          />
+          <ReferenceArea
+            y1={40}
+            y2={70}
+            fill={isDark ? "#854d0e" : "#fef9c3"}
+            fillOpacity={isDark ? 0.35 : 0.4}
+          />
+          <ReferenceArea
+            y1={0}
+            y2={40}
+            fill={isDark ? "#991b1b" : "#fee2e2"}
+            fillOpacity={isDark ? 0.32 : 0.4}
+          />
 
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#e2e8f0"
+            stroke={gridStroke}
             vertical={false}
           />
 
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: tickFill }}
             tickLine={false}
             axisLine={false}
             interval={tickInterval}
           />
           <YAxis
             domain={[0, 100]}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: tickFill }}
             tickLine={false}
             axisLine={false}
             ticks={[0, 25, 40, 70, 100]}
@@ -294,7 +320,11 @@ export default function TrajectoryChart({
 
           <Tooltip
             content={<CustomTooltip />}
-            cursor={{ stroke: "#cbd5e1", strokeWidth: 1, strokeDasharray: "3 3" }}
+            cursor={{
+              stroke: tooltipCursorStroke,
+              strokeWidth: 1,
+              strokeDasharray: "3 3",
+            }}
           />
 
           {/* Alert threshold */}
@@ -324,7 +354,7 @@ export default function TrajectoryChart({
             activeDot={{
               r: 6,
               fill: style.fill,
-              stroke: "#fff",
+              stroke: dotStrokeOuter,
               strokeWidth: 2,
               style: { filter: "drop-shadow(0 0 4px rgba(0,0,0,0.15))" },
             }}
@@ -342,7 +372,7 @@ export default function TrajectoryChart({
           { label: "At Risk (40–69)", dot: "bg-amber-400" },
           { label: "Critical (0–39)", dot: "bg-red-400" },
         ].map(({ label, dot }) => (
-          <span key={label} className="flex items-center gap-1.5 text-[10px] text-slate-400">
+          <span key={label} className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
             <span className={`h-2 w-2 rounded-full ${dot}`} />
             {label}
           </span>

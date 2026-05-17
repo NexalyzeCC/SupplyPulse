@@ -45,11 +45,15 @@ export default async function RootLayout({
           toastOptions={{
             classNames: {
               toast:
-                "font-sans text-sm rounded-xl border border-slate-200 shadow-lg",
-              success: "text-emerald-700 border-emerald-200 bg-emerald-50",
-              error: "text-red-700 border-red-200 bg-red-50",
-              warning: "text-amber-700 border-amber-200 bg-amber-50",
-              info: "text-blue-700 border-blue-200 bg-blue-50",
+                "font-sans text-sm rounded-xl border shadow-lg bg-white text-slate-900 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
+              success:
+                "text-emerald-800 border-emerald-200 bg-emerald-50 dark:text-emerald-200 dark:border-emerald-900/55 dark:bg-emerald-950/40",
+              error:
+                "text-red-800 border-red-200 bg-red-50 dark:text-red-200 dark:border-red-900/55 dark:bg-red-950/40",
+              warning:
+                "text-amber-900 border-amber-200 bg-amber-50 dark:text-amber-200 dark:border-amber-900/50 dark:bg-amber-950/35",
+              info:
+                "text-blue-800 border-blue-200 bg-blue-50 dark:text-blue-200 dark:border-blue-900/50 dark:bg-blue-950/40",
             },
           }}
         />

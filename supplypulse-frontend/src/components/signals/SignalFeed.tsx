@@ -23,23 +23,28 @@ const TYPE_META: Record<
 > = {
   news: {
     icon: Newspaper,
-    badgeCls: "bg-blue-50 text-blue-700 ring-1 ring-blue-100",
+    badgeCls:
+      "bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900/55",
   },
   legal: {
     icon: Scale,
-    badgeCls: "bg-purple-50 text-purple-700 ring-1 ring-purple-100",
+    badgeCls:
+      "bg-purple-50 text-purple-700 ring-1 ring-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:ring-purple-900/55",
   },
   financial: {
     icon: BarChart3,
-    badgeCls: "bg-orange-50 text-orange-700 ring-1 ring-orange-100",
+    badgeCls:
+      "bg-orange-50 text-orange-800 ring-1 ring-orange-100 dark:bg-orange-950/35 dark:text-orange-300 dark:ring-orange-900/50",
   },
   leadership: {
     icon: Users,
-    badgeCls: "bg-pink-50 text-pink-700 ring-1 ring-pink-100",
+    badgeCls:
+      "bg-pink-50 text-pink-800 ring-1 ring-pink-100 dark:bg-pink-950/35 dark:text-pink-300 dark:ring-pink-900/50",
   },
   operational: {
     icon: Factory,
-    badgeCls: "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100",
+    badgeCls:
+      "bg-cyan-50 text-cyan-800 ring-1 ring-cyan-100 dark:bg-cyan-950/35 dark:text-cyan-300 dark:ring-cyan-900/50",
   },
 };
 
@@ -65,13 +70,13 @@ function ConfidenceBar({ value }: { value: number }) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
         <div
           className={`h-full rounded-full transition-all duration-500 ${barCls}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="w-8 shrink-0 text-right text-[10px] font-medium text-slate-400">
+      <span className="w-8 shrink-0 text-right text-[10px] font-medium text-slate-400 dark:text-slate-500">
         {pct}%
       </span>
     </div>
@@ -88,13 +93,13 @@ function SignalCard({ signal }: { signal: Signal }) {
     <article
       className={`
         rounded-xl border bg-white p-4 shadow-sm transition-shadow
-        hover:shadow-md
+        hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:shadow-black/20 dark:hover:shadow-black/35
         ${
           signal.severity === "critical"
-            ? "border-red-200"
+            ? "border-red-200 dark:border-red-900/50"
             : signal.severity === "high"
-              ? "border-orange-200"
-              : "border-slate-200"
+              ? "border-orange-200 dark:border-orange-900/45"
+              : "border-slate-200 dark:border-slate-700"
         }
       `}
     >
@@ -118,14 +123,14 @@ function SignalCard({ signal }: { signal: Signal }) {
 
         {/* Signal date */}
         {signal.signal_date && (
-          <span className="shrink-0 text-[10px] text-slate-400">
+          <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">
             {formatDate(signal.signal_date)}
           </span>
         )}
       </div>
 
       {/* ── Summary ── */}
-      <p className="mt-2.5 text-sm leading-5 text-slate-700">
+      <p className="mt-2.5 text-sm leading-5 text-slate-700 dark:text-slate-200">
         {signal.summary}
       </p>
 
@@ -135,7 +140,7 @@ function SignalCard({ signal }: { signal: Signal }) {
           href={signal.source_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+          className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
         >
           <ExternalLink className="h-3 w-3 shrink-0" aria-hidden />
           <span className="truncate max-w-[240px]">
@@ -146,8 +151,8 @@ function SignalCard({ signal }: { signal: Signal }) {
 
       {/* ── Confidence bar ── */}
       {signal.confidence > 0 && (
-        <div className="mt-3 border-t border-slate-100 pt-3">
-          <p className="mb-1 text-[10px] font-medium text-slate-400">
+        <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+          <p className="mb-1 text-[10px] font-medium text-slate-400 dark:text-slate-500">
             Confidence
           </p>
           <ConfidenceBar value={signal.confidence} />
@@ -179,14 +184,16 @@ function FilterPill({
       className={[
         "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors",
         active
-          ? "bg-slate-900 text-white"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700",
       ].join(" ")}
     >
       {label}
       <span
         className={`rounded-full px-1.5 text-[9px] font-bold ${
-          active ? "bg-white/20 text-white" : "bg-slate-200 text-slate-500"
+          active
+            ? "bg-white/20 text-white dark:bg-slate-900/10 dark:text-slate-900"
+            : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
         }`}
       >
         {count}
@@ -250,19 +257,21 @@ export default function SignalFeed({ signals }: SignalFeedProps) {
   const criticalCount = signals.filter((s) => s.severity === "critical").length;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:shadow-black/25">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">Risk signals</h2>
-          <p className="text-xs text-slate-400">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            Risk signals
+          </h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             {signals.length === 0
               ? "No signals from this scan"
               : `${signals.length} signal${signals.length !== 1 ? "s" : ""} detected`}
           </p>
         </div>
         {criticalCount > 0 && (
-          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700 ring-1 ring-red-200">
+          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700 ring-1 ring-red-200 dark:bg-red-950/45 dark:text-red-300 dark:ring-red-900/55">
             {criticalCount} critical
           </span>
         )}
@@ -270,7 +279,7 @@ export default function SignalFeed({ signals }: SignalFeedProps) {
 
       {/* ── Type filter (only rendered when >1 type present) ── */}
       {activeTypes.length > 1 && (
-        <div className="flex flex-wrap gap-1.5 border-b border-slate-100 px-5 py-3">
+        <div className="flex flex-wrap gap-1.5 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
           <FilterPill
             value="all"
             active={activeFilter === "all"}

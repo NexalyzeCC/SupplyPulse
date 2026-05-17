@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AUTH_TEXT_INPUT_CLASS } from "@/lib/auth-field-classes";
+import { getPublicSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -27,11 +29,12 @@ export default function SignupPage() {
 
     setLoading(true);
     const supabase = createClient();
+    const siteOrigin = getPublicSiteOrigin() || window.location.origin;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/callback`,
+        emailRedirectTo: `${siteOrigin}/callback`,
       },
     });
 
@@ -46,17 +49,17 @@ export default function SignupPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/40">
           <div className="mb-4 text-4xl">📬</div>
-          <h1 className="mb-2 text-xl font-bold text-gray-900">
+          <h1 className="mb-2 text-xl font-bold text-slate-900 dark:text-slate-100">
             Check your email
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             We sent a confirmation link to{" "}
             <span className="font-medium">{email}</span>. Click it to activate
             your account, then{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">
               sign in
             </Link>
             .
@@ -67,9 +70,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/40">
+        <h1 className="mb-6 text-2xl font-bold text-slate-900 dark:text-slate-100">
           Create your account
         </h1>
 
@@ -77,7 +80,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Email
             </label>
@@ -88,14 +91,14 @@ export default function SignupPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={AUTH_TEXT_INPUT_CLASS}
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Password
             </label>
@@ -106,14 +109,14 @@ export default function SignupPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={AUTH_TEXT_INPUT_CLASS}
             />
           </div>
 
           <div>
             <label
               htmlFor="confirm"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Confirm password
             </label>
@@ -124,12 +127,12 @@ export default function SignupPage() {
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={AUTH_TEXT_INPUT_CLASS}
             />
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-300">
               {error}
             </p>
           )}
@@ -143,11 +146,11 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-blue-600 hover:underline"
+            className="font-medium text-blue-600 hover:underline dark:text-blue-400"
           >
             Sign in
           </Link>

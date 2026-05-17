@@ -101,16 +101,16 @@ export default async function SupplierDetailPage({
       {/* ── Back link ── */}
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to dashboard
       </Link>
 
       {/* ── Hero card ── */}
-      <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${colors ? colors.border : "border-slate-200"}`}>
+      <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-slate-900/60 dark:shadow-black/25 ${colors ? colors.border : "border-slate-200 dark:border-slate-800"}`}>
         {/* Colour band */}
-        <div className={`h-1.5 w-full ${colors ? colors.dot : "bg-slate-200"}`} />
+        <div className={`h-1.5 w-full ${colors ? colors.dot : "bg-slate-200 dark:bg-slate-700"}`} />
 
         <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-start sm:justify-between">
 
@@ -124,7 +124,7 @@ export default async function SupplierDetailPage({
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {supplier.name}
                 </h1>
                 {tier && colors && (
@@ -135,7 +135,7 @@ export default async function SupplierDetailPage({
               </div>
 
               {/* Meta row */}
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
                 {supplier.country && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -162,9 +162,9 @@ export default async function SupplierDetailPage({
                   </span>
                   {delta && (
                     <span className={`text-sm font-semibold tabular-nums ${
-                      delta.startsWith("+") ? "text-emerald-600" :
-                      delta.startsWith("-") ? "text-red-600" :
-                      "text-slate-400"
+                      delta.startsWith("+") ? "text-emerald-600 dark:text-emerald-400" :
+                      delta.startsWith("-") ? "text-red-600 dark:text-red-400" :
+                      "text-slate-400 dark:text-slate-500"
                     }`}>
                       {delta} pts since last scan
                     </span>
@@ -173,7 +173,7 @@ export default async function SupplierDetailPage({
               )}
 
               {/* Last scanned */}
-              <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
+              <p className="mt-2 flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
                 <Clock className="h-3 w-3 shrink-0" />
                 {latestScore
                   ? `Last scanned ${formatDate(latestScore.created_at)}`
@@ -188,7 +188,7 @@ export default async function SupplierDetailPage({
 
             <Link
               href={`/suppliers/${supplier.id}/edit`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-200"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               <Pencil className="h-4 w-4" />
               Edit
@@ -204,13 +204,13 @@ export default async function SupplierDetailPage({
         <div className="space-y-6 lg:col-span-7">
 
           {/* Trajectory chart */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:shadow-black/25">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Score trajectory
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {allScores.length} scan{allScores.length !== 1 ? "s" : ""} recorded
                 </p>
               </div>
@@ -228,14 +228,14 @@ export default async function SupplierDetailPage({
 
           {/* AI summary */}
           {latestScore?.summary && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-3 text-sm font-semibold text-slate-900">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:shadow-black/25">
+              <h2 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 AI assessment
               </h2>
-              <p className="text-sm leading-7 text-slate-600">
+              <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                 {latestScore.summary}
               </p>
-              <p className="mt-3 text-[11px] text-slate-400">
+              <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
                 Generated {formatDate(latestScore.created_at)} · Not financial
                 or legal advice
               </p>
