@@ -22,7 +22,7 @@ import type { Supplier, SupplierScore } from "@/lib/types/types";
 
 interface AlertEntry {
   id: string;
-  channel: "email" | "slack";
+  channels: ("email" | "slack")[];
   sentAt: string;
   supplierId: string;
   supplierName: string;
@@ -31,6 +31,7 @@ interface AlertEntry {
   score: number | null;
   direction: SupplierScore["direction"] | null;
 }
+
 
 // ─── Timeline date grouping ───────────────────────────────────────────────────
 
@@ -80,17 +81,18 @@ async function getAlerts(): Promise<AlertEntry[]> {
   const supabase = await createClient();
 
   // Supabase infers FK joins from schema; aliases keep the shape readable
-  const { data, error } = await supabase
+    const { data, error } = await supabase
     .from("alert_log")
     .select(
       `
       id,
-      channel,
+      channels,
       sent_at,
+      score,
       supplier_id,
       score_id,
       supplier:suppliers ( id, name, criticality, alert_threshold ),
-      score:supplier_scores ( score, direction )
+      score_row:supplier_scores ( score, direction )
     `,
     )
     .order("sent_at", { ascending: false })
@@ -100,7 +102,6 @@ async function getAlerts(): Promise<AlertEntry[]> {
   if (!data) return [];
 
   return data.map((row) => {
-    // Supabase types nested FK joins as arrays; normalise to single object or null
     const sup = oneOrNull<{
       id: string;
       name: string;
@@ -111,27 +112,29 @@ async function getAlerts(): Promise<AlertEntry[]> {
     const sc = oneOrNull<{
       score: number;
       direction: SupplierScore["direction"];
-    }>(row.score);
+    }>(row.score_row);
 
     return {
       id:             row.id as string,
-      channel:        row.channel as "email" | "slack",
+      channels:       (row.channels ?? []) as ("email" | "slack")[],
       sentAt:         row.sent_at as string,
       supplierId:     (sup?.id ?? row.supplier_id) as string,
       supplierName:   sup?.name ?? "Unknown supplier",
       criticality:    sup?.criticality ?? "medium",
       alertThreshold: sup?.alert_threshold ?? 40,
-      score:          sc?.score ?? null,
+      // Prefer the denormalised score on alert_log; fall back to the join.
+      score:          (row.score as number | null) ?? sc?.score ?? null,
       direction:      sc?.direction ?? null,
     };
   });
+
 }
 
 // ─── Stats bar ────────────────────────────────────────────────────────────────
 
 function StatsBar({ alerts }: { alerts: AlertEntry[] }) {
-  const emailCount = alerts.filter((a) => a.channel === "email").length;
-  const slackCount = alerts.filter((a) => a.channel === "slack").length;
+  const emailCount = alerts.filter((a) => a.channels.includes("email")).length;
+  const slackCount = alerts.filter((a) => a.channels.includes("slack")).length;
 
   return (
     <dl className="grid grid-cols-3 gap-4">
@@ -219,7 +222,7 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
 
           {/* Channel + time */}
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <ChannelBadge channel={entry.channel} />
+            <ChannelBadges channels={entry.channels} />
             <time
               dateTime={entry.sentAt}
               className="text-[11px] text-slate-400 dark:text-slate-500"
@@ -260,22 +263,50 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
 
 // ─── Channel badge ────────────────────────────────────────────────────────────
 
-function ChannelBadge({ channel }: { channel: "email" | "slack" }) {
-  if (channel === "email") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
-        <Mail className="h-3 w-3" />
-        Email
-      </span>
-    );
-  }
+// function ChannelBadge({ channel }: { channel: "email" | "slack" }) {
+//   if (channel === "email") {
+//     return (
+//       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+//         <Mail className="h-3 w-3" />
+//         Email
+//       </span>
+//     );
+//   }
+//   return (
+//     <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:ring-purple-900/55">
+//       <MessageSquare className="h-3 w-3" />
+//       Slack
+//     </span>
+//   );
+// }
+
+function ChannelBadges({ channels }: { channels: ("email" | "slack")[] }) {
+  if (channels.length === 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:ring-purple-900/55">
-      <MessageSquare className="h-3 w-3" />
-      Slack
-    </span>
+    <div className="flex flex-wrap justify-end gap-1">
+      {channels.map((channel) =>
+        channel === "email" ? (
+          <span
+            key={channel}
+            className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+          >
+            <Mail className="h-3 w-3" />
+            Email
+          </span>
+        ) : (
+          <span
+            key={channel}
+            className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:ring-purple-900/55"
+          >
+            <MessageSquare className="h-3 w-3" />
+            Slack
+          </span>
+        ),
+      )}
+    </div>
   );
 }
+
 
 
 // ─── Page ─────────────────────────────────────────────────────────────────────

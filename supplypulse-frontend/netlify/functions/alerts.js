@@ -46,19 +46,19 @@ exports.handler = async (event) => {
   try {
     // Join alert_log → suppliers to filter by the authenticated user's suppliers.
     // The alert_log table has: id, supplier_id, score_id, score, channels, created_at
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from("alert_log")
       .select(`
         id,
         score,
         channels,
-        created_at,
+        sent_at,
         supplier_id,
         score_id,
         suppliers!inner ( id, name, country, user_id )
       `)
       .eq("suppliers.user_id", user.id)
-      .order("created_at", { ascending: false })
+      .order("sent_at", { ascending: false })
       .limit(50);
 
     if (error) {
@@ -66,14 +66,13 @@ exports.handler = async (event) => {
       return json(500, { error: error.message });
     }
 
-    // Normalise: strip the nested user_id before sending to the client
     const entries = (data ?? []).map((row) => ({
       id:          row.id,
       supplier_id: row.supplier_id,
       score_id:    row.score_id,
       score:       row.score,
       channels:    row.channels ?? [],
-      created_at:  row.created_at,
+      sent_at:     row.sent_at,
       supplier: {
         id:      row.suppliers?.id,
         name:    row.suppliers?.name,

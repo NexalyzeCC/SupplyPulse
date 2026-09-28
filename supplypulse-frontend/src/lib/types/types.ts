@@ -49,8 +49,10 @@ export interface AlertLogEntry {
   id: string;
   supplier_id: string;
   score_id: string;
-  channel: "email" | "slack";
+  score: number | null;
+  channels: ("email" | "slack")[];
   sent_at: string;
   supplier?: Supplier;
-  score?: SupplierScore;
+  score_row?: SupplierScore;
 }
+
