@@ -18,6 +18,7 @@ import {
   formatPrice,
   type Tier,
 } from "@/lib/plans";
+import { apiUrl } from "@/lib/api";
 
 interface Props {
   tier:                  Tier;
@@ -28,7 +29,7 @@ interface Props {
   supplierCount:         number;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+//const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 /** Stripe / portal return absolute HTTPS URLs; module-level avoids render-phase purity lint false-positives. */
 function redirectToExternalUrl(url: string) {
@@ -120,7 +121,7 @@ export default function PlanSection({
         return;
       }
 
-      const res = await fetch(`${API_BASE}/.netlify/functions/create-checkout`, {
+      const res = await fetch(apiUrl("create-checkout"), {
         method: "POST",
         headers: {
           "Content-Type":  "application/json",
@@ -168,7 +169,7 @@ export default function PlanSection({
         return;
       }
 
-      const res = await fetch(`${API_BASE}/.netlify/functions/billing-portal`, {
+      const res = await fetch(apiUrl("billing-portal"), {
         method:  "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

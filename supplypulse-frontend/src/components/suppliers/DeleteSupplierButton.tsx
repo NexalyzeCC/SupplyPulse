@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { apiUrl } from "@/lib/api";
 
 interface Props {
   supplierId: string;
@@ -49,13 +50,11 @@ export default function DeleteSupplierButton({
     }
 
     try {
-      const res = await fetch(
-        `${API_BASE}/.netlify/functions/suppliers?supplierId=${encodeURIComponent(supplierId)}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(apiUrl("suppliers", { supplierId }), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
 
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };

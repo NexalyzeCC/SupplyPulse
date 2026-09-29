@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { apiUrl } from "@/lib/api";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+//const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 const CONFIRM_TEXT = "DELETE";
 
 export default function DangerZone() {
@@ -37,13 +39,11 @@ export default function DangerZone() {
         return;
       }
 
-      const res = await fetch(
-        `${API_BASE}/.netlify/functions/delete-account`,
-        {
-          method:  "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(apiUrl("delete-account"), {
+        method:  "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
 
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };

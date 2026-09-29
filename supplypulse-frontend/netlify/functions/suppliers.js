@@ -133,19 +133,19 @@ exports.handler = async (event) => {
       .from("user_subscriptions")
       .select("tier, status")
       .eq("user_id", user.id)
-      .single();
-    const tier = sub?.status === "active" ? (sub?.tier || "starter") : "starter";
+      .maybeSingle();
 
     const { count } = await supabase
       .from("suppliers")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id);
 
-    if (count >= TIER_LIMITS[tier]) {
+    const limitCheck = checkSupplierLimit(sub, count ?? 0);
+    if (!limitCheck.allowed) {
       return json(403, {
         error: "supplier_limit_reached",
-        tier,
-        limit: TIER_LIMITS[tier],
+        tier:  limitCheck.tier,
+        limit: limitCheck.limit,
       });
     }
 
@@ -311,3 +311,26 @@ exports.handler = async (event) => {
 
   return { statusCode: 405, headers: HEADERS, body: "Method Not Allowed" };
 };
+
+/**
+ * Resolves the effective tier for a subscription row. A user with no row, or
+ * whose subscription lapsed, falls back to starter.
+ * @param {{ tier?:string, status?:string }|null|undefined} sub
+ */
+function effectiveTier(sub) {
+  return sub?.status === "active" ? (sub.tier || "starter") : "starter";
+}
+
+/**
+ * @returns {{ allowed:boolean, tier:string, limit:number }}
+ */
+function checkSupplierLimit(sub, currentCount) {
+  const tier  = effectiveTier(sub);
+  const limit = TIER_LIMITS[tier] ?? TIER_LIMITS.starter;
+  return { allowed: currentCount < limit, tier, limit };
+}
+
+exports.effectiveTier = effectiveTier;
+exports.checkSupplierLimit = checkSupplierLimit;
+exports.TIER_LIMITS = TIER_LIMITS;
+

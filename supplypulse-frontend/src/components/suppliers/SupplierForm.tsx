@@ -21,6 +21,7 @@ import {
 } from "@/lib/constants";
 import { getScoreColor, getScoreTier } from "@/lib/utils";
 import type { Supplier } from "@/lib/types/types";
+import { apiUrl } from "@/lib/api";
 
 // ─── Criticality card metadata ────────────────────────────────────────────────
 
@@ -228,8 +229,7 @@ export default function SupplierForm({
       return;
     }
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
-    const url = `${API_BASE}/.netlify/functions/suppliers`;
+    const url = apiUrl("suppliers");
     const payload = {
       name: values.name.trim(),
       country: values.country || null,

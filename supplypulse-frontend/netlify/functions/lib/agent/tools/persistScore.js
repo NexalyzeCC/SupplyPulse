@@ -88,6 +88,7 @@ async function persistScore(supplierId, scoreResult, signals, ctx = {}) {
   if (signals.length > 0) {
     const t1 = Date.now();
     const rows = signals.map((s) => ({
+      supplier_id:  supplierId,
       score_id:     scoreId,
       type:         s.type,
       severity:     s.severity,
@@ -97,6 +98,7 @@ async function persistScore(supplierId, scoreResult, signals, ctx = {}) {
       signal_date:  s.signal_date  ?? null,
       confidence:   s.confidence,
     }));
+
 
     try {
       const { error: signalErr } = await supabase
