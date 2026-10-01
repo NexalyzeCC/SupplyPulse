@@ -1,8 +1,12 @@
-const { describe, it, expect } = require("vitest");
+import { describe, it, expect } from "vitest";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 const {
   validateScoreOutput,
   validateSignals,
 } = require("../netlify/functions/lib/validation");
+
 
 describe("validateScoreOutput", () => {
   it("clamps an out-of-range score into 0-100", () => {

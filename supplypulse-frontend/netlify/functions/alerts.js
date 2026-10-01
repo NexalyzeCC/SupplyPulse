@@ -82,7 +82,9 @@ exports.handler = async (event) => {
 
     return json(200, entries);
   } catch (err) {
-    console.error("[alerts] Unhandled error:", err);
-    return json(500, { error: err.message });
+    captureError(err, { fn: "score-supplier", supplierId });
+    console.error("[score-supplier] Unhandled error:", err);
+    return json(500, { error: err.message ?? "Internal server error" });
   }
+  
 };

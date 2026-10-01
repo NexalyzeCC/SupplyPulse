@@ -1,6 +1,7 @@
 const { stripe } = require("./lib/stripe-client");
 const { tierFromSubscription } = require("./stripe-tiers");
 const { createClient } = require("@supabase/supabase-js");
+const { captureError } = require("./lib/sentry");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -154,6 +155,7 @@ exports.handler = async (event) => {
         break;
     }
   } catch (err) {
+    captureError(err, { fn: "stripe-webhook", eventType: stripeEvent.type });
     console.error(`[stripe-webhook] ${stripeEvent.type}:`, err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }

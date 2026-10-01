@@ -18,6 +18,7 @@
 const { createClient }  = require("@supabase/supabase-js");
 const { verifyUser }    = require("./lib/auth");
 const { HEADERS, preflight } = require("./lib/cors");
+const { captureError } = require("./lib/sentry");
 
 const RECENT_WINDOW_MS = 5 * 60 * 1_000; // 5 minutes
 
@@ -110,7 +111,8 @@ exports.handler = async (event) => {
       scoreId:   data.id,
     });
   } catch (err) {
-    console.error("[score-status] Unhandled error:", err);
-    return json(500, { status: "failed", message: err.message });
+    captureError(err, { fn: "score-supplier", supplierId });
+    console.error("[score-supplier] Unhandled error:", err);
+    return json(500, { error: err.message ?? "Internal server error" });
   }
 };
