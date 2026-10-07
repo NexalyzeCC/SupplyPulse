@@ -100,7 +100,7 @@ function topSignals(signals) {
  * @returns {string}
  */
 function buildAlertEmail(supplier, scoreResult, signals) {
-  const { score, direction, summary } = scoreResult;
+  const { score, direction, summary, prevScore } = scoreResult;
   const threshold  = supplier.alert_threshold ?? 40;
   const label      = scoreLabel(score);
   const color      = scoreColor(score);
@@ -132,6 +132,13 @@ function buildAlertEmail(supplier, scoreResult, signals) {
         </div>
       </td>
     </tr>`).join("");
+
+  const deltaLine = (prevScore != null && prevScore !== score)
+    ? `<p style="margin:0 0 12px;font-size:14px;color:${scoreColor(score)};font-weight:600;">
+         ${prevScore} → ${score} (${score > prevScore ? "+" : ""}${score - prevScore} since last scan)
+       </p>`
+    : "";
+
 
   const signalsSection = top3.length > 0 ? `
     <h3 style="margin:24px 0 12px;font-size:14px;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:0.05em;">

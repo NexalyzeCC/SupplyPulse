@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeTier } from "@/lib/plans";
 import AccountSection from "@/components/profile/AccountSection";
 import PlanSection from "@/components/profile/PlanSection";
+import NotificationSection from "@/components/profile/NotificationSection";
 import DangerZone from "@/components/profile/DangerZone";
 import BillingReturnToast from "@/components/profile/BillingReturnToast";
 
