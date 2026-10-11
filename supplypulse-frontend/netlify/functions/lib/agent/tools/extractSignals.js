@@ -74,6 +74,11 @@ async function extractSignals(supplierName, results, ctx = {}) {
       latencyMs: Date.now() - t0,
     });
 
+    if (Array.isArray(ctx.usage)) {
+      ctx.usage.push({ model: MODEL, usage: completion.usage });
+    }
+
+
     const text = completion.choices[0]?.message?.content ?? "[]";
 
     let parsed;

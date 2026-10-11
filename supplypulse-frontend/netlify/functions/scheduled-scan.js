@@ -19,24 +19,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-async function invokeScan(s) {
-  return fetch(`${process.env.URL}/.netlify/functions/score-supplier`, {
-    method: "POST",
-    headers: {
-      "Content-Type":       "application/json",
-      "X-Scheduled-Secret": process.env.SCHEDULED_SECRET ?? "",
-    },
-    body: JSON.stringify({
-      supplierId:   s.id,
-      supplierName: s.name,
-      country:      s.country,
-      category:     s.category,
-    }),
-  });
-}
-
-// Replace the invokeScan() function with:
-
 /** Bulk-enqueue scans. Conflicts (already queued) are silently skipped. */
 async function enqueueScans(eligible) {
   const rows = eligible.map((s) => ({
@@ -80,9 +62,6 @@ const handler = async () => {
   // warm Lambdas and would freeze the value across days.
   const day = new Date().getUTCDay();   // 0 = Sun, 1 = Mon
   const isWeeklyDay = day === 1;        // Starter runs on Mondays only
-  const queued = await enqueueScans(eligible);
-
-  console.log(`[scheduled-scan] Queued ${queued} scans (${eligible.length} eligible)`);
 
   console.log(
     `[scheduled-scan] Starting (day=${day}, isWeeklyDay=${isWeeklyDay})`,
@@ -140,16 +119,11 @@ const handler = async () => {
     return { statusCode: 200 };
   }
 
-  for (let i = 0; i < eligible.length; i += 5) {
-    const batch = eligible.slice(i, i + 5);
-    await Promise.allSettled(batch.map(invokeScan));
-    if (i + 5 < eligible.length) {
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-  }
+  const queued = await enqueueScans(eligible);
+  console.log(`[scheduled-scan] Queued ${queued} scans (${eligible.length} eligible)`);
 
   await kickWorker();
-  console.log(`[scheduled-scan] Done — ${eligible.length} suppliers scanned`);
+
   return { statusCode: 200 };
 };
 

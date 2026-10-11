@@ -45,7 +45,31 @@ export default function NotificationSection() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const headers = await authHeaders();
+      if (!headers) { if (!cancelled) setLoading(false); return; }
+
+      try {
+        const res = await fetch(apiUrl("alert-recipients"), { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = (await res.json()) as Recipient[];
+        if (!cancelled) setRecipients(rows);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error("Could not load alert destinations", {
+            description: err instanceof Error ? err.message : "Network error.",
+          });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();

@@ -105,6 +105,8 @@ export default async function ProfilePage({
         supplierCount={supplierCount}
       />
 
+      <NotificationSection />
+
       {/* ── Danger zone ── */}
       <DangerZone />
     </div>

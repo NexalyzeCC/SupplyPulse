@@ -12,8 +12,6 @@ interface Props {
   supplierName: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
-
 export default function DeleteSupplierButton({
   supplierId,
   supplierName,

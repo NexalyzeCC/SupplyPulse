@@ -159,7 +159,9 @@ async function runAgentLoop(supplierId, opts = {}) {
           scoreId:   cached.scoreId,
           score:     cached.score,
           direction: cached.direction,
+          costUsd:   0,
         };
+
       }
     }
 

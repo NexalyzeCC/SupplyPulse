@@ -93,10 +93,6 @@ async function synthesizeScore(signals, supplier, ctx = {}) {
       latencyMs: Date.now() - t0,
     });
 
-    if (Array.isArray(ctx.usage)) {
-      ctx.usage.push({ model: MODEL, usage: completion.usage });
-    }
-
     console.error("[synthesizeScore] LLM error:", err.message);
     // Return a safe default so the pipeline can still persist something
     return {

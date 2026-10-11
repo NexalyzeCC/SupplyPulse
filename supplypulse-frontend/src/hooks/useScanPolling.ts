@@ -253,7 +253,8 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
       }
 
       startRef.current = Date.now();
-      setState({ kind: "scanning", polls: 0, elapsedMs: 0 });
+      setState({ kind: "queued", polls: 0, elapsedMs: 0 });
+
 
       await runPollLoop(abort, 0, supplierId, getAccessToken, setState, () => router.refresh());
     } catch (err) {

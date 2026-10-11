@@ -20,8 +20,6 @@ const { verifyUser }    = require("./lib/auth");
 const { HEADERS, preflight } = require("./lib/cors");
 const { captureError } = require("./lib/sentry");
 
-const RECENT_WINDOW_MS = 5 * 60 * 1_000; // 5 minutes
-
 function json(statusCode, body) {
   return {
     statusCode,
