@@ -21,6 +21,7 @@ const { persistScore }    = require("./tools/persistScore");
 const { sendAlert }       = require("./tools/sendAlert");
 const { logEvent }        = require("../logger");
 const { sanitizeText, sanitizeSupplierName } = require("../sanitize");
+const { estimateCostUsd } = require("./cost");
 
 // ─── Supabase (service role for reads the anon key can't do) ─────────────────
 
@@ -131,7 +132,8 @@ async function runAgentLoop(supplierId, opts = {}) {
   // ── Run identity + timing for structured logs ────────────────────────────────
   const runId   = crypto.randomUUID();
   const startMs = Date.now();
-  const ctx     = { runId, supplierId };
+  const ctx = { runId, supplierId, usage: [] };
+
 
   logEvent("agent_run_start", { run_id: runId, supplier_id: supplierId });
 
@@ -225,12 +227,25 @@ async function runAgentLoop(supplierId, opts = {}) {
       duration_ms: Date.now() - startMs,
     });
 
+    const costUsd = estimateCostUsd(ctx.usage);
+
+    logEvent("agent_run_end", {
+      run_id:      runId,
+      supplier_id: supplierId,
+      status:      "complete",
+      score:       scoreResult.score,
+      cost_usd:    costUsd,
+      duration_ms: Date.now() - startMs,
+    });
+
     return {
       status:    "complete",
       scoreId,
       score:     scoreResult.score,
       direction: scoreResult.direction,
+      costUsd,
     };
+    
   } catch (err) {
     logEvent("agent_run_end", {
       run_id:      runId,

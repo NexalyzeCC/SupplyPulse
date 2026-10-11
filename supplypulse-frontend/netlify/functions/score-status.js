@@ -58,10 +58,8 @@ exports.handler = async (event) => {
     { auth: { persistSession: false } },
   );
 
-  try {
+    try {
     // ── Ownership check ──────────────────────────────────────────────────────
-    // Confirm the supplier belongs to the authenticated user before revealing
-    // any score data.
     const { data: supplier, error: supplierErr } = await supabase
       .from("suppliers")
       .select("id")
@@ -69,50 +67,74 @@ exports.handler = async (event) => {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (supplierErr) {
-      return json(500, { status: "failed", message: supplierErr.message });
-    }
+    if (supplierErr) return json(500, { status: "failed", message: supplierErr.message });
+    if (!supplier)   return json(404, { status: "failed", message: "Supplier not found" });
 
-    if (!supplier) {
-      // Either supplier doesn't exist or it belongs to a different user.
-      return json(404, { status: "failed", message: "Supplier not found" });
-    }
-
-    // ── Fetch latest score ───────────────────────────────────────────────────
-    const { data, error } = await supabase
-      .from("supplier_scores")
-      .select("id, score, direction, created_at")
+    // ── Most recent job for this supplier ────────────────────────────────────
+    const { data: job, error: jobErr } = await supabase
+      .from("scan_jobs")
+      .select("id, status, error, score_id, created_at")
       .eq("supplier_id", supplierId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (error) {
-      return json(500, { status: "failed", message: error.message });
+    if (jobErr) return json(500, { status: "failed", message: jobErr.message });
+
+    if (!job) {
+      // No job was ever enqueued for this supplier.
+      return json(200, { status: "idle" });
     }
 
-    if (!data) {
-      // No score row exists yet — scan is still running (or hasn't started).
-      return json(200, { status: "running" });
+    if (job.status === "queued")  return json(200, { status: "queued" });
+    if (job.status === "running") return json(200, { status: "running" });
+
+    if (job.status === "failed") {
+      return json(200, {
+        status:  "failed",
+        message: job.error ?? "The agent scan failed. Please try again.",
+      });
     }
 
-    // ── Recency check ────────────────────────────────────────────────────────
-    const ageMs = Date.now() - new Date(data.created_at).getTime();
-    if (ageMs > RECENT_WINDOW_MS) {
-      // Latest score is older than 5 minutes — scan still in flight (or stalled).
-      return json(200, { status: "running" });
+    // ── done — return the score the job produced ─────────────────────────────
+    const { data: score, error: scoreErr } = await supabase
+      .from("supplier_scores")
+      .select("id, score, direction")
+      .eq("id", job.score_id)
+      .maybeSingle();
+
+    if (scoreErr) return json(500, { status: "failed", message: scoreErr.message });
+
+    if (!score) {
+      // Job completed but was skipped by the idempotency guard — fall back to
+      // the latest score so the UI still resolves.
+      const { data: latest } = await supabase
+        .from("supplier_scores")
+        .select("id, score, direction")
+        .eq("supplier_id", supplierId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latest) return json(200, { status: "running" });
+
+      return json(200, {
+        status:    "complete",
+        score:     latest.score,
+        direction: latest.direction,
+        scoreId:   latest.id,
+      });
     }
 
-    // Fresh score — report completion.
     return json(200, {
       status:    "complete",
-      score:     data.score,
-      direction: data.direction, // "improving" | "stable" | "deteriorating"
-      scoreId:   data.id,
+      score:     score.score,
+      direction: score.direction,
+      scoreId:   score.id,
     });
   } catch (err) {
-    captureError(err, { fn: "score-supplier", supplierId });
-    console.error("[score-supplier] Unhandled error:", err);
-    return json(500, { error: err.message ?? "Internal server error" });
+    captureError(err, { fn: "score-status", supplierId });
+    console.error("[score-status] Unhandled error:", err);
+    return json(500, { status: "failed", message: err.message });
   }
 };

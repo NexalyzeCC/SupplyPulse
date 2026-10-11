@@ -35,12 +35,54 @@ async function invokeScan(s) {
   });
 }
 
+// Replace the invokeScan() function with:
+
+/** Bulk-enqueue scans. Conflicts (already queued) are silently skipped. */
+async function enqueueScans(eligible) {
+  const rows = eligible.map((s) => ({
+    supplier_id: s.id,
+    user_id:     s.user_id,
+  }));
+
+  // Chunked so one oversized cron run can't blow the statement limit.
+  let queued = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const chunk = rows.slice(i, i + 500);
+    const { data, error } = await supabase
+      .from("scan_jobs")
+      .upsert(chunk, { onConflict: "supplier_id", ignoreDuplicates: true })
+      .select("id");
+
+    if (error) {
+      console.error("[scheduled-scan] enqueue error:", error.message);
+      continue;
+    }
+    queued += data?.length ?? 0;
+  }
+  return queued;
+}
+
+async function kickWorker() {
+  try {
+    await fetch(`${process.env.URL}/.netlify/functions/scan-worker-background`, {
+      method:  "POST",
+      headers: { "X-Scheduled-Secret": process.env.SCHEDULED_SECRET ?? "" },
+    });
+  } catch (err) {
+    console.warn("[scheduled-scan] worker kick failed (non-fatal):", err.message);
+  }
+}
+
+
 const handler = async () => {
   // Compute eligibility day inside the handler (not module scope) so each
   // invocation uses the current weekday — module evaluation is cached on
   // warm Lambdas and would freeze the value across days.
   const day = new Date().getUTCDay();   // 0 = Sun, 1 = Mon
   const isWeeklyDay = day === 1;        // Starter runs on Mondays only
+  const queued = await enqueueScans(eligible);
+
+  console.log(`[scheduled-scan] Queued ${queued} scans (${eligible.length} eligible)`);
 
   console.log(
     `[scheduled-scan] Starting (day=${day}, isWeeklyDay=${isWeeklyDay})`,
@@ -106,6 +148,7 @@ const handler = async () => {
     }
   }
 
+  await kickWorker();
   console.log(`[scheduled-scan] Done — ${eligible.length} suppliers scanned`);
   return { statusCode: 200 };
 };

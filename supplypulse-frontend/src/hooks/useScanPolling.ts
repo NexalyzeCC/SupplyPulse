@@ -7,13 +7,15 @@ import { apiUrl } from "@/lib/api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export const POLL_INTERVAL_MS = 5_000;            // 5 s between polls
-export const POLL_TIMEOUT_MS  = 3 * 60 * 1_000;  // 3-minute hard stop
-export const MAX_POLLS        = POLL_TIMEOUT_MS / POLL_INTERVAL_MS; // 36
+export const POLL_INTERVAL_MS = 5_000;
+export const POLL_TIMEOUT_MS  = 10 * 60 * 1_000;  // 10-minute hard stop
+export const MAX_POLLS        = POLL_TIMEOUT_MS / POLL_INTERVAL_MS; // 120
 
 // ─── API response type ────────────────────────────────────────────────────────
 
 export type StatusResponse =
+  | { status: "idle" }
+  | { status: "queued" }
   | { status: "running" }
   | {
       status: "complete";
@@ -36,6 +38,7 @@ export interface LatestScore {
 export type ScanState =
   | { kind: "idle" }
   | { kind: "starting" }
+  | { kind: "queued";   polls: number; elapsedMs: number }
   | { kind: "scanning"; polls: number; elapsedMs: number }
   | { kind: "complete"; latestScore: LatestScore }
   | { kind: "error";   message: string }
@@ -115,15 +118,25 @@ async function runPollLoop(
         });
         return;
 
-      case "running":
-      default:
-        // Increment poll counter and recurse
+      case "queued":
         setState((prev) =>
-          prev.kind === "scanning"
-            ? { ...prev, polls: pollCount + 1 }
+          prev.kind === "queued" || prev.kind === "scanning"
+            ? { kind: "queued", polls: pollCount + 1, elapsedMs: prev.elapsedMs }
             : prev,
         );
         await runPollLoop(abort, pollCount + 1, supplierId, getToken, setState, onComplete);
+        return;
+
+      case "running":
+      case "idle":
+      default:
+        setState((prev) =>
+          prev.kind === "queued" || prev.kind === "scanning"
+            ? { kind: "scanning", polls: pollCount + 1, elapsedMs: prev.elapsedMs }
+            : prev,
+        );
+        await runPollLoop(abort, pollCount + 1, supplierId, getToken, setState, onComplete);
+
     }
   } catch (err) {
     if (!abort.signal.aborted) {
@@ -170,7 +183,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
   // ── Elapsed-second ticker ─────────────────────────────────────────────────
 
   useEffect(() => {
-    if (state.kind !== "scanning") {
+    if (state.kind !== "scanning" && state.kind !== "queued") {
       if (tickerRef.current) {
         clearInterval(tickerRef.current);
         tickerRef.current = null;
@@ -180,7 +193,7 @@ export function useScanPolling(supplierId: string): UseScanPollingReturn {
 
     tickerRef.current = setInterval(() => {
       setState((prev) =>
-        prev.kind === "scanning"
+        prev.kind === "scanning" || prev.kind === "queued"
           ? { ...prev, elapsedMs: Date.now() - startRef.current }
           : prev,
       );

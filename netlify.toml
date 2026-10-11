@@ -19,5 +19,9 @@
   function = "scheduled-scan"
   schedule = "0 6 * * *"
 
+[[scheduled_functions]]
+  function = "scan-worker-cron"
+  schedule = "*/10 * * * *"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

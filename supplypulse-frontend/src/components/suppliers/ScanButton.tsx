@@ -37,9 +37,9 @@ export default function ScanButton({
     if (prev === next) return;
     prevKind.current = next;
 
-    if (next === "scanning" && prev === "starting") {
-      toast.info("Scan started", {
-        description: "The AI agent is scanning for risk signals…",
+    if ((next === "queued" || next === "scanning") && prev === "starting") {
+      toast.info("Scan queued", {
+        description: "The AI agent will pick this up momentarily…",
       });
     } else if (next === "complete") {
       toast.success("Scan complete", {
@@ -80,6 +80,20 @@ export default function ScanButton({
       </button>
     );
   }
+
+  // ── queued ───────────────────────────────────────────────────────────────
+
+  if (state.kind === "queued") {
+    return (
+      <div
+        className={`${base} cursor-default border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300`}
+      >
+        <Clock className={`${sm ? "h-3 w-3" : "h-4 w-4"}`} />
+        {sm ? "Queued" : "Queued…"}
+      </div>
+    );
+  }
+
 
   // ── scanning ─────────────────────────────────────────────────────────────
 
