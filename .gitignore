@@ -6,3 +6,10 @@ Docs/**
 SupplyPulse-Business-Development-Plan.pdf
 SupplyPulse-Business-Proposal.docx
 supplypulse-frontend/suuply pulse.pdf
+
+# dependencies
+node_modules/
+
+# env files — never commit (service role key, API keys)
+.env
+.env.*
