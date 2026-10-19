@@ -5,8 +5,10 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.{js,ts}"],
     env: {
-      SUPABASE_URL: `${process.env.SUPABASE_URL}`,
-      SUPABASE_SERVICE_ROLE_KEY: `${process.env.SUPABASE_SERVICE_ROLE_KEY }`,
+      // Placeholders so modules that build a Supabase client at load time
+      // (lib/auth.js) can be required. Unit tests never hit the network.
+      SUPABASE_URL: process.env.SUPABASE_URL ?? "https://placeholder.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "placeholder-service-role-key",
     },
   },
 });
