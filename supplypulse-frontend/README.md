@@ -76,3 +76,9 @@ npm run lint
 ```
 
 For **`/api/*`** and **`/.netlify/functions/*`** locally (scoring, suppliers API, Stripe), run **`netlify dev`** from the **repository root** — see **`../README.md`**.
+
+## Netlify secret scanning
+
+The root `netlify.toml` excludes only the public Supabase URL and anonymous browser key, including their server variable aliases, from value-based secret scanning. Next.js embeds the `NEXT_PUBLIC_` configuration in browser bundles. The deployed anonymous keys were checked for the `anon` role before adding these exceptions. Never use a service-role key or a Supabase secret key for these variables.
+
+Secret scanning remains enabled for private credentials. If a deploy still fails, use the scanner’s variable name and affected file path to identify the remaining match; keep detected values redacted. Remove exposed private credentials and rotate them with their provider rather than broadening the exclusions.
