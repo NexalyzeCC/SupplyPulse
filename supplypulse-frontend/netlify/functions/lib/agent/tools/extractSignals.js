@@ -12,29 +12,13 @@
  * }>
  */
 
-const OpenAI = require("openai");
 const { SYSTEM_PROMPT, EXTRACTION_PROMPT } = require("../prompts");
 const { validateSignals } = require("../../validation");
 const { logLLM } = require("../../logger");
+const { getClient, modelFor } = require("../llm");
 
-const MODEL = "gpt-4o-mini";
+const MODEL = modelFor("fast");
 
-// Lazy singleton. The new OpenAI SDK throws synchronously in its constructor
-// when OPENAI_API_KEY is missing — instantiating at module load time would
-// crash the whole Netlify function before the handler can run. Defer the
-// construction to the first call so a missing key produces a clean error.
-let _client = null;
-function getClient() {
-  if (_client) return _client;
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is not configured. Set it in your environment (Netlify → Site settings → Environment variables for production).",
-    );
-  }
-  _client = new OpenAI.OpenAI({ apiKey });
-  return _client;
-}
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 

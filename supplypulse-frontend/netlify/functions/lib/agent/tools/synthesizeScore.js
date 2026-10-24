@@ -8,28 +8,12 @@
  * Score is clamped to [0, 100] and direction is constrained to the enum.
  */
 
-const OpenAI = require("openai");
 const { SYSTEM_PROMPT, SYNTHESIS_PROMPT } = require("../prompts");
 const { validateScoreOutput } = require("../../validation");
 const { logLLM } = require("../../logger");
+const { getClient, modelFor } = require("../llm");
 
-const MODEL = "gpt-4o";
-
-// Lazy singleton. See extractSignals.js for the rationale — the OpenAI
-// constructor throws synchronously when OPENAI_API_KEY is missing, so
-// instantiating at module load would crash before the handler runs.
-let _client = null;
-function getClient() {
-  if (_client) return _client;
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is not configured. Set it in your environment (Netlify → Site settings → Environment variables for production).",
-    );
-  }
-  _client = new OpenAI.OpenAI({ apiKey });
-  return _client;
-}
+const MODEL = modelFor("smart");
 
 // ─── Public ───────────────────────────────────────────────────────────────────
 

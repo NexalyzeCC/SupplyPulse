@@ -2,7 +2,10 @@
   "name": "supplypulse",
   "version": "0.1.0",
   "private": true,
-    "scripts": {
+    "engines": { 
+    "node": ">=22.12" 
+  },
+  "scripts": {
     "predev": "node scripts/clean-dev-lock.js",
     "dev": "node scripts/dev.js",
     "build": "next build",
