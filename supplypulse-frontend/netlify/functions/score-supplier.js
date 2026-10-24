@@ -47,19 +47,41 @@ function isScheduledCall(event) {
 }
 
 /** Fire-and-forget kick so a queued job starts without waiting for the cron. */
+// async function kickWorker() {
+//   const base = process.env.URL ?? process.env.APP_URL;
+//   if (!base) return;
+//   try {
+//     await fetch(`${base}/.netlify/functions/scan-worker-background`, {
+//       method:  "POST",
+//       headers: { "X-Scheduled-Secret": process.env.SCHEDULED_SECRET ?? "" },
+//     });
+//   } catch (err) {
+//     // Non-fatal: the job is queued and the cron will drain it regardless.
+//     console.warn("[score-supplier] Worker kick failed (non-fatal):", err.message);
+//   }
+// }
+
 async function kickWorker() {
-  const base = process.env.URL ?? process.env.APP_URL;
+  // APP_URL first: under `netlify dev`, URL can point at the deployed site,
+  // which would send local jobs to the production worker.
+  const base = process.env.APP_URL ?? process.env.URL;
   if (!base) return;
   try {
-    await fetch(`${base}/.netlify/functions/scan-worker-background`, {
+    // Background functions always answer 202, even when the worker then
+    // rejects the secret, so a 2xx here only means the request was delivered.
+    const res = await fetch(`${base}/.netlify/functions/scan-worker-background`, {
       method:  "POST",
       headers: { "X-Scheduled-Secret": process.env.SCHEDULED_SECRET ?? "" },
     });
+    if (!res.ok) {
+      console.warn(`[score-supplier] Worker kick to ${base} rejected: HTTP ${res.status}`);
+    }
   } catch (err) {
-    // Non-fatal: the job is queued and the cron will drain it regardless.
     console.warn("[score-supplier] Worker kick failed (non-fatal):", err.message);
   }
 }
+
+
 
 exports.handler = async (event) => {
   const pre = preflight(event);

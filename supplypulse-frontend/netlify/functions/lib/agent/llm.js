@@ -14,14 +14,15 @@ const PROVIDERS = {
     baseURL: undefined,
     models:  { fast: "gpt-4o-mini", smart: "gpt-4o" },
   },
-  gemini: {
+    gemini: {
     keyVar:  "GEMINI_API_KEY",
     baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
     models:  {
-      fast:  process.env.GEMINI_MODEL_FAST ?? "gemini-2.5-flash",
-      smart: process.env.GEMINI_MODEL      ?? "gemini-2.5-pro",
+      fast:  process.env.GEMINI_MODEL_FAST || "gemini-3.5-flash",
+      smart: process.env.GEMINI_MODEL      || "gemini-3.5-flash",
     },
   },
+
 };
 
 function provider() {

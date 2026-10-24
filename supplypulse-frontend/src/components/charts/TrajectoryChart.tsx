@@ -150,6 +150,24 @@ function EmptyChart({ height }: { height: number }) {
   );
 }
 
+function EmptyWindowState({ days, height }: { days: Window; height: number }) {
+  return (
+    <div
+      style={{ height }}
+      className="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 text-center dark:bg-slate-900/60"
+    >
+      <BarChart2 className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+      <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+        No scans in the last {days} days
+      </p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        Choose a longer window or run a new scan.
+      </p>
+    </div>
+  );
+}
+
+
 function SinglePointState({
   point,
   height,
@@ -214,14 +232,61 @@ export default function TrajectoryChart({
     [allPoints, scores, window],
   );
 
-  // ── Empty states ──
+  // // ── Empty states ──
+  // if (scores.length === 0) return <EmptyChart height={height} />;
+  // if (scores.length === 1)
+  //   return <SinglePointState point={allPoints[0]} height={height} />;
+
+  // // Even if window filter removes all but 1, show the single-point state
+  // if (data.length === 1)
+  //   return <SinglePointState point={data[0]} height={height} />;
+
+  // // ── Derived styling from latest visible point ──
+  // const latest = data[data.length - 1];
+  // const style = zoneStyle(latest.score);
+    // ── Empty states ──
   if (scores.length === 0) return <EmptyChart height={height} />;
   if (scores.length === 1)
     return <SinglePointState point={allPoints[0]} height={height} />;
 
-  // Even if window filter removes all but 1, show the single-point state
-  if (data.length === 1)
-    return <SinglePointState point={data[0]} height={height} />;
+  const tabs = (
+    <div className="mb-4 flex items-center justify-between">
+      <p className="text-xs text-slate-400 dark:text-slate-500">
+        {data.length} scan{data.length !== 1 ? "s" : ""} in window
+      </p>
+      <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/80">
+        {WINDOWS.map((w) => (
+          <button
+            key={w}
+            onClick={() => setWindow(w)}
+            className={[
+              "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
+              window === w
+                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100 dark:shadow-none"
+                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200",
+            ].join(" ")}
+          >
+            {w}d
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // The window filter can leave 0 or 1 points even with a longer history.
+  // Keep the tabs visible so the user can widen the window again.
+  if (data.length < 2) {
+    return (
+      <div>
+        {tabs}
+        {data.length === 1 ? (
+          <SinglePointState point={data[0]} height={height} />
+        ) : (
+          <EmptyWindowState days={window} height={height} />
+        )}
+      </div>
+    );
+  }
 
   // ── Derived styling from latest visible point ──
   const latest = data[data.length - 1];
@@ -234,7 +299,7 @@ export default function TrajectoryChart({
 
   return (
     <div>
-      {/* Time window tabs */}
+      {/* Time window tabs
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs text-slate-400 dark:text-slate-500">
           {data.length} scan{data.length !== 1 ? "s" : ""} in window
@@ -255,7 +320,10 @@ export default function TrajectoryChart({
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
+
+      {tabs}
+
 
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart

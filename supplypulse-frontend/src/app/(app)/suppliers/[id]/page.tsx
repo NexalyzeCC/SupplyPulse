@@ -38,14 +38,25 @@ async function getSupplierDetail(id: string) {
   if (!supplier) return null;
 
   // All scores ordered oldest → newest for the trajectory chart (max 90 points)
+  // const { data: scores } = await supabase
+  //   .from("supplier_scores")
+  //   .select("id, score, direction, summary, recommendations, created_at")
+  //   .eq("supplier_id", id)
+  //   .order("created_at", { ascending: true })
+  //   .limit(90);
+
+  // const allScores = (scores ?? []) as SupplierScore[];
+
+    // Newest 90 scores, then flipped oldest → newest for the trajectory chart
   const { data: scores } = await supabase
     .from("supplier_scores")
     .select("id, score, direction, summary, recommendations, created_at")
     .eq("supplier_id", id)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(90);
 
-  const allScores = (scores ?? []) as SupplierScore[];
+  const allScores = ((scores ?? []) as SupplierScore[]).reverse();
+
   const latestScore = allScores.length > 0
     ? allScores[allScores.length - 1]
     : null;
